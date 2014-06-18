@@ -72,6 +72,8 @@ public:
   int ZS_threshold_I_;
   int numberOfSamples_;
   int numberOfPresamples_;
+  int passed;///////////////////////////////////
+  int failed;
   uint32_t minSignalThreshold_;
   uint32_t PMT_NoiseThreshold_; 
 

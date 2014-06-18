@@ -39,6 +39,7 @@ private:
   bool runFrontEndFormatError_;
 
   bool HFEMB_;
+  bool RAWDataCon_;
   edm::ParameterSet LongShortCut_;
 };
 

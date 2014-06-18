@@ -22,7 +22,9 @@
 
 #include <algorithm>
 
-
+//debug stuff
+#include <iostream>
+using namespace std;
 
 
 HcalTrigPrimDigiProducer::HcalTrigPrimDigiProducer(const edm::ParameterSet& ps)
@@ -42,7 +44,9 @@ HcalTrigPrimDigiProducer::HcalTrigPrimDigiProducer(const edm::ParameterSet& ps)
   runZS_(ps.getParameter<bool>("RunZS")),
   runFrontEndFormatError_(ps.getParameter<bool>("FrontEndFormatError"))
 {
+    cout<<"test 1"<<endl;
     HFEMB_ = false;
+    RAWDataCon_=false;
     if(ps.exists("LSConfig"))
     {
         LongShortCut_ = ps.getUntrackedParameter<edm::ParameterSet>("LSConfig");
@@ -51,7 +55,9 @@ HcalTrigPrimDigiProducer::HcalTrigPrimDigiProducer(const edm::ParameterSet& ps)
         MinShortEnergy_ = LongShortCut_.getParameter<double>("Min_Short_Energy"); //minimum short energy
         LongShortSlope_ = LongShortCut_.getParameter<double>("Long_vrs_Short_Slope"); //slope of the line that cuts are based on
         LongShortOffset_ = LongShortCut_.getParameter<double>("Long_Short_Offset"); //offset of line
+        RAWDataCon_  = LongShortCut_.getParameter<bool>("RawData");//added do to issue with Raw data
     }
+    
   // register for data access
   tok_raw_ = consumes<FEDRawDataCollection>(inputTagFEDRaw_);
   tok_hbhe_ = consumes<HBHEDigiCollection>(inputLabel_[0]);
@@ -63,6 +69,7 @@ HcalTrigPrimDigiProducer::HcalTrigPrimDigiProducer(const edm::ParameterSet& ps)
 
 
 void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup& eventSetup) {
+    
 
   // Step A: get the conditions, for the decoding
   edm::ESHandle<HcalTPGCoder> inputCoder;
@@ -84,13 +91,17 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
   edm::Handle<HBHEDigiCollection> hbheDigis;
   edm::Handle<HFDigiCollection>   hfDigis;
-
-  iEvent.getByToken(tok_hbhe_,hbheDigis);
-  iEvent.getByToken(tok_hf_,hfDigis);
-
+  if(!RAWDataCon_)
+    {
+        iEvent.getByToken(tok_hbhe_, hbheDigis);
+        iEvent.getByToken(tok_hf_, hfDigis);
+    } else
+    {
+        iEvent.getByLabel("hcalDigis", hbheDigis);
+        iEvent.getByLabel("hcalDigis", hfDigis);
+    }
   // protect here against missing input collections
   // there is no protection in HcalTriggerPrimitiveAlgo
-
   if (!hbheDigis.isValid()) {
       edm::LogInfo("HcalTrigPrimDigiProducer")
               << "\nWarning: HBHEDigiCollection with input tag "
@@ -105,7 +116,6 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
       return;
   }
-
   if (!hfDigis.isValid()) {
       edm::LogInfo("HcalTrigPrimDigiProducer")
               << "\nWarning: HFDigiCollection with input tag "
@@ -126,10 +136,10 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
     eventSetup.get<HcalDbRecord> ().get(pSetup);
 
     HcalFeatureBit* hfembit = 0;
-
     if(HFEMB_)
-    {
+    { 
         hfembit = new HcalFeatureHFEMBit(MinShortEnergy_, MinLongEnergy_, LongShortSlope_, LongShortOffset_, *pSetup); //inputs values that cut will be based on
+        
         theAlgo_.run(inputCoder.product(), outTranscoder->getHcalCompressor().get(),
                 *hbheDigis, *hfDigis, *result, &(*pG), rctlsb, hfembit);
 

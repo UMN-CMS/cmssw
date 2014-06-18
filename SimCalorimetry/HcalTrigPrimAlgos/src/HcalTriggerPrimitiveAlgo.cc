@@ -26,6 +26,8 @@ HcalTriggerPrimitiveAlgo::HcalTriggerPrimitiveAlgo( bool pf, const std::vector<d
                                                    PMT_NoiseThreshold_(PMT_NoiseThreshold),
                                                    peak_finder_algorithm_(2)
 {
+    failed=0;
+    passed=0;
    //No peak finding setting (for Fastsim)
    if (!peakfind_){
       numberOfSamples_ = 1; 
@@ -37,6 +39,7 @@ HcalTriggerPrimitiveAlgo::HcalTriggerPrimitiveAlgo( bool pf, const std::vector<d
 
 
 HcalTriggerPrimitiveAlgo::~HcalTriggerPrimitiveAlgo() {
+    //cout<<"okay so the number that passed is "<<passed<<" and the number of failed is "<<failed<<endl<<endl;
 }
 
 
@@ -88,6 +91,7 @@ void HcalTriggerPrimitiveAlgo::run(const HcalTPGCoder* incoder,
          } else if (detId.version() == 1) {
             analyzeHFV1(mapItr->second, result.back(), hf_lumi_shift, LongvrsShortCut);
          } else {
+             cout<<"you attempted to use a version that HcalTriggerPrimitiveAlgo does not support"<<endl;
             // Things are going to go poorly
          }
       }
@@ -142,12 +146,14 @@ void HcalTriggerPrimitiveAlgo::addSignal(const HFDataFrame & frame) {
    if(frame.id().depth() == 1 || frame.id().depth() == 2) {
       std::vector<HcalTrigTowerDetId> ids = theTrigTowerGeometry->towerIds(frame.id());
       std::vector<HcalTrigTowerDetId>::const_iterator it;
+      
       for (it = ids.begin(); it != ids.end(); ++it) {
-         HcalTrigTowerDetId trig_tower_id = *it;
+          if(abs(frame.id().ieta())==29)continue;
+          HcalTrigTowerDetId trig_tower_id = *it;
          IntegerCaloSamples samples(trig_tower_id, frame.size());
          samples.setPresamples(frame.presamples());
          incoder_->adc2Linear(frame, samples);
-
+         
          // Don't add to final collection yet
          // HF PMT veto sum is calculated in analyzerHF()
          IntegerCaloSamples zero_samples(trig_tower_id, frame.size());
@@ -397,12 +403,27 @@ void HcalTriggerPrimitiveAlgo::analyzeHFV1(
         int ADCLong = HF_DETAILS->LongDigi[ibin].adc();
         int ADCShort = HF_DETAILS->ShortDigi[ibin].adc();
 
-
-
+        bool test =false;
+        if(HF_DETAILS->ShortDigi.id().ieta()==0||HF_DETAILS->LongDigi.id().ieta()==0)continue;
         if(HCALFEM != 0)
         {
+            if(HF_DETAILS->ShortDigi.id().ieta()!=HF_DETAILS->LongDigi.id().ieta()||HF_DETAILS->ShortDigi.id().iphi()!=HF_DETAILS->LongDigi.id().iphi())
+            {
+              cout<<"ADC short id is"<<HF_DETAILS->ShortDigi.id()<<endl;
+           cout<<"ADC long id is"<<HF_DETAILS->LongDigi.id()<<endl;
+           int k;
+           cin>>k;
+            }
+           //cout<<"ADCShort: "<<ADCShort<<endl<<"ADCLong: "<<ADCLong<<endl<<endl;
+           //cout<<"ADC short id is"<<HF_DETAILS->ShortDigi.id()<<endl;
+           //cout<<"ADC long id is"<<HF_DETAILS->LongDigi.id()<<endl;
             finegrain[ibin] = HCALFEM->fineGrainbit(ADCShort, HF_DETAILS->ShortDigi.id(), HF_DETAILS->ShortDigi[ibin].capid(), ADCLong, HF_DETAILS->LongDigi.id(), HF_DETAILS->LongDigi[ibin].capid());
+            if(finegrain[ibin])test=true;
         }
+        
+        if(test)passed++;
+        else failed++;
+        
     }
     outcoder_->compress(output, finegrain, result);
     
