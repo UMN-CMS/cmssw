@@ -119,13 +119,13 @@ tester::tester(const edm::ParameterSet& iConfig)
     //makingtest = new TFile("Thow.root", "RECREATE");
     edm::Service<TFileService> fs;
     TFileDirectory passed = fs->mkdir("testing");
-    LSDeposited = passed.make<TH2F>("Long_fiber_vrs_ShortEDeposit", "long fiber vrs short; long fiber EDep; short fiber EDep", 200, 0, 100, 200, 0, 100);
+    LSDeposited = passed.make<TH2F>("Long_fiber_vrs_ShortEDeposit", "long fiber vrs short; long fiber EDep; short fiber EDep", 150, 0, 1500, 150, 0, 1500);
     //LSDeposited = new TH2F("short_fiber_vrs_long_EDeposit", "short fiber vrs long; long fiber EDep; short fiber EDep", 200, 0, 50, 200, 0, 50);
 }
 //now do what ever initialization is needed
 
 tester::~tester() {
-
+    
     // do anything here that needs to be done at desctruction time
     // (e.g. close files, deallocate resources etc.)
 }
@@ -176,10 +176,11 @@ tester::analyze(const edm::Event& iEvent, const edm::EventSetup& eventsetup)
             numElect++;
             ElecIniEvent = true;
             TotalReal++; // counts total number of real electrons
-            if(gieta > 0) gparts.insert(make_pair(gieta - 30, giphi)); // should make say whether a electron hit the sensor
-            else gparts.insert(make_pair(gieta + 30, giphi));
+            gparts.insert(make_pair(gieta , giphi));
+            //if(gieta > 0) gparts.insert(make_pair(gieta - 30, giphi)); // should make say whether a electron hit the sensor
+            //else gparts.insert(make_pair(gieta + 30, giphi));
         }
-
+    }
         //end generated stuff
         using namespace edm;
 
@@ -217,6 +218,7 @@ tester::analyze(const edm::Event& iEvent, const edm::EventSetup& eventsetup)
         //probably going to get rid of this.
         for(unsigned ihit = 0; ihit < hf_digi->size(); ++ihit)
         {
+            
             const HFDataFrame& LongDigi = (*hf_digi)[ihit];
             int ieta = LongDigi.id().ieta();
             int iphi = LongDigi.id().iphi();
@@ -239,11 +241,11 @@ tester::analyze(const edm::Event& iEvent, const edm::EventSetup& eventsetup)
 
 
 
-            double ShortEE;
-            double LongEE;
+            double ShortEE=-1;
+            double LongEE=-1;
             double ShortLadc;
             double LongLadc;
-            for(int w = 0; w < 5; w++)
+            for(int w = 0; w < LongDigi.size(); w++)
             {
 
 
@@ -286,7 +288,13 @@ tester::analyze(const edm::Event& iEvent, const edm::EventSetup& eventsetup)
 
 
             }
-            LSDeposited->Fill(LongEE, ShortEE);
+            if(gparts.find(make_pair(LongDigi.id().ieta(), LongDigi.id().iphi())) != gparts.end())
+            {
+                LSDeposited->Fill(LongEE, ShortEE);
+                //cout<<"so our LongEE is :"<<LongEE<<" and our ShortEE is :"<<ShortEE<<endl;
+                if(LongEE==-1||ShortEE==-1)cout<<"found  ieta :"<<LongDigi.id().ieta()<<"  iphi"<<LongDigi.id().iphi()<<endl;
+            }
+            
 
             for(int i = 0; i < 4; i++)
             {
@@ -307,7 +315,7 @@ tester::analyze(const edm::Event& iEvent, const edm::EventSetup& eventsetup)
                 }
             }
         }
-    }
+    
 }
 
 

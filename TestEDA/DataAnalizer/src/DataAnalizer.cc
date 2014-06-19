@@ -145,7 +145,7 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using namespace edm;
     bool fine = false;
-    
+
     for(int q = 0; q < 2; q++)
     {
         int hit = 0;
@@ -182,7 +182,8 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                         PrimPassEtvrsiEta->Fill(30 + ieta, PCuts.MaxEtPos[ieta][iphi]);
                         PrimPassEtvrsiPhi->Fill(iphi, PCuts.MaxEtPos[ieta][iphi]);
-
+                        PrimPassEtvrsiEta->Fill(30 + ieta, PCuts.MaxEtNeg[ieta][iphi]);
+                        PrimPassEtvrsiPhi->Fill(iphi, PCuts.MaxEtNeg[ieta][iphi]);
                     } else
                     {
                         PrimAllPassEt->Fill(PCuts.MaxEtPos[ieta][iphi]);
@@ -238,8 +239,6 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         PrimAllPassRatioEt->Fill(ratio);
                     }
                     hit++;
-
-                    PrimPassRatioEt->Fill(ratio);
                 }
             }
         }
@@ -337,7 +336,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
 
         for(int i = 0; i < tp->size(); i++)
         {
-            if(MaxEt < outTranscoder->hcaletValue(tp->id(), (*tp)[i])&&((*tp)[i].fineGrain() || UseFine))
+            if(MaxEt < outTranscoder->hcaletValue(tp->id(), (*tp)[i])&&((*tp)[i].fineGrain() || !UseFine))
             {
                 //cout<<"okay hopfully this works we have a compression bit of :"<<(*tp)[i].compressedEt()<<endl;
                 //cout<<"and our real Et is "<<outTranscoder->hcaletValue(tp->id(), (*tp)[i])<<endl;
