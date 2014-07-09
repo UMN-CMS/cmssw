@@ -2,11 +2,11 @@ import FWCore.ParameterSet.Config as cms
 
 LSParameter =cms.untracked.PSet(
 HcalFeatureHFEMBit= cms.bool(True),
-Min_Long_Energy= cms.double(9),#makes a cut based on energy deposited in short vrs long
-    Min_Short_Energy= cms.double(7),
-    Long_vrs_Short_Slope= cms.double(100),
-    Long_Short_Offset= cms.double(10),
-    RawData = cms.bool(True))
+Min_Long_Energy= cms.double(41),#makes a cut based on energy deposited in short vrs long
+    Min_Short_Energy= cms.double(10),
+    Long_vrs_Short_Slope= cms.double(.375),
+    Long_Short_Offset= cms.double(-267),
+    RawData = cms.bool(False)) 
 
 
 simHcalTriggerPrimitiveDigis = cms.EDProducer("HcalTrigPrimDigiProducer",

@@ -11,23 +11,23 @@ class HcalTPGCompressor;
 class EcalTPGCompressor;
 
 namespace edm {
-  class EventSetup; 
+  class EventSetup;
 }
 
 /** \class CaloTPGTranscoder
-  *  
-  * Abstract interface for the mutual transcoder required for compressing
-  * and uncompressing the ET stored in HCAL and ECAL Trigger Primitives
-  * 
-  * \author J. Mans - Minnesota
-  */
+*
+* Abstract interface for the mutual transcoder required for compressing
+* and uncompressing the ET stored in HCAL and ECAL Trigger Primitives
+*
+* \author J. Mans - Minnesota
+*/
 class CaloTPGTranscoder {
 public:
   CaloTPGTranscoder();
-  virtual ~CaloTPGTranscoder(); 
+  virtual ~CaloTPGTranscoder();
 
   enum Mode { All=0, RCT=1, HcalTPG=2, EcalTPG=3 };
-  /// Obtain any needed objects from the EventSetup.  Note that any member variables which are changed must be mutable.
+  /// Obtain any needed objects from the EventSetup. Note that any member variables which are changed must be mutable.
   virtual void setup(const edm::EventSetup& es, Mode mode=All) const;
   /// Release any objects obtained from the EventSetup
   virtual void releaseSetup() const;
@@ -37,14 +37,15 @@ public:
   virtual EcalTriggerPrimitiveSample ecalCompress(const EcalTrigTowerDetId& id, unsigned int sample, bool fineGrain) const = 0;
   /** \brief Uncompression for the Electron/Photon path in the RCT */
   virtual void rctEGammaUncompress(const HcalTrigTowerDetId& hid, const HcalTriggerPrimitiveSample& hc,
-				   const EcalTrigTowerDetId& eid, const EcalTriggerPrimitiveSample& ec, 
-				   unsigned int& et, bool& egVeto, bool& activity) const = 0;
+const EcalTrigTowerDetId& eid, const EcalTriggerPrimitiveSample& ec,
+unsigned int& et, bool& egVeto, bool& activity) const = 0;
   /** \brief Uncompression for the JET path in the RCT */
   virtual void rctJetUncompress(const HcalTrigTowerDetId& hid, const HcalTriggerPrimitiveSample& hc,
-				   const EcalTrigTowerDetId& eid, const EcalTriggerPrimitiveSample& ec, 
-				   unsigned int& et) const = 0;
+const EcalTrigTowerDetId& eid, const EcalTriggerPrimitiveSample& ec,
+unsigned int& et) const = 0;
 
-  virtual double hcaletValue(const HcalTrigTowerDetId& hid, const HcalTriggerPrimitiveSample& hc) const = 0; 
+  virtual double hcaletValue(const HcalTrigTowerDetId& hid, const int& compET) const = 0;
+  virtual double hcaletValue(const HcalTrigTowerDetId& hid, const HcalTriggerPrimitiveSample& hc) const = 0;
   boost::shared_ptr<HcalTPGCompressor> getHcalCompressor() const { return hccompress_; }
   boost::shared_ptr<EcalTPGCompressor> getEcalCompressor() const { return eccompress_; }
 private:
