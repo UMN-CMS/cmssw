@@ -671,9 +671,9 @@ void DataLumiComp(string FileOrgin)
     c1->cd();
 
     c1->SetLogy();
-    ProfNoFineTrigCalcLum->GetYaxis()->SetTitle("luminosity Hz/Ub");
+    ProfNoFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
     ProfNoFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
-    ProfNoFineTrigCalcLum->GetXaxis()->SetTitle("Number of Trigger Candidates");
+    ProfNoFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfNoFineTrigCalcLum->Draw();
     //PrimFineTrigCanLum->Draw("COLZ");
     cout << "test 4" << endl;
@@ -702,9 +702,9 @@ void DataLumiComp(string FileOrgin)
     }
 
     c2->SetLogy();
-    ProfFineTrigCalcLum->GetYaxis()->SetTitle("luminosity Hz/Ub");
+    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
     ProfFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
-    ProfFineTrigCalcLum->GetXaxis()->SetTitle("Number of Trigger Candidates");
+    ProfFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfFineTrigCalcLum->Draw();
     cout << "test 6" << endl;
     plotname = "PDFFiles/" + saveloc + "/finetrig" + type;
@@ -749,9 +749,9 @@ void DataLumiComp(string FileOrgin)
     c3->SetFillColor(10);
     c3->cd();
     c3->SetLogz();
-    NormPrimFineTrigCanLum.GetYaxis()->SetTitle("luminosity Hz/Ub");
+    NormPrimFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/Ub");
     NormPrimFineTrigCanLum.GetYaxis()->SetTitleOffset(1.5);
-    NormPrimFineTrigCanLum.GetXaxis()->SetTitle("Number of Trigger Candidates");
+    NormPrimFineTrigCanLum.GetYaxis()->SetTitle("Number of Trigger Candidates");
     NormPrimFineTrigCanLum.Draw("COLZ");
     plotname = "PDFFiles/" + saveloc + "/finetrignorm" + type;
     gStyle->SetOptStat("");
@@ -766,9 +766,9 @@ void DataLumiComp(string FileOrgin)
     c4->SetFillColor(10);
     c4->cd();
     c4->SetLogz();
-    NormPrimNoFineTrigCanLum.GetYaxis()->SetTitle("luminosity Hz/Ub");
+    NormPrimNoFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/Ub");
     NormPrimNoFineTrigCanLum.GetYaxis()->SetTitleOffset(1.5);
-    NormPrimNoFineTrigCanLum.GetXaxis()->SetTitle("Number of Trigger Candidates");
+    NormPrimNoFineTrigCanLum.GetYaxis()->SetTitle("Number of Trigger Candidates");
     //NormPrimNoFineTrigCanLum.GetXaxis()->SetTimeOffset(.15);
     NormPrimNoFineTrigCanLum.Draw("COLZ");
     plotname = "PDFFiles/" + saveloc + "/nofinetrignorm" + type;
@@ -786,9 +786,9 @@ void DataLumiComp(string FileOrgin)
     
 
     c5->SetLogy();
-    ProfFineTrigCalcLum->GetYaxis()->SetTitle("luminosity Hz/Ub");
+    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
     ProfFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
-    ProfFineTrigCalcLum->GetXaxis()->SetTitle("Number of Trigger Candidates");
+    ProfFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfFineTrigCalcLum->SetMarkerColor(kBlue+1);
     gStyle->SetOptStat("");
     ProfFineTrigCalcLum->SetMarkerStyle(kFullSquare);
