@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("HFCALIB")
+process = cms.Process("HFCALIB")   
 
 
 #--- Steps available to this configuration       ---#
@@ -71,9 +71,9 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("output.root"),
+    fileName = cms.untracked.string("DIGIoutput.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-    outputCommands = cms.untracked.vstring( 'keep *' )
+    outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*' )
 )
 
 ###--- (3) Re-RECO from RAW ---###
@@ -123,7 +123,7 @@ process.dump  = cms.EDAnalyzer("HcalDigiDump")
 process.test = cms.EDAnalyzer("tester")
 process.DataAna =cms.EDAnalyzer("DataAnalizer")
 process.CutAs = cms.EDAnalyzer("CutAssessment")
-process.FullGraph = cms.EDAnalyzer('LSEn')
+process.FullGraph = cms.EDAnalyzer('LSEn')          #Does not work right now.  Is not included in path
 #--- Histograms ---#
 from SimCalorimetry.HcalTrigPrimProducers.hcaltpdigi_cfi import LSParameter
 #new_filename = "Long"+LSParameter.Min_Long_Energy.pythonValue() + "_Short" + LSParameter.Min_Short_Energy.pythonValue() + "_Slope_OffSet" + LSParameter.Long_vrs_Short_Slope.pythonValue() + "_Long_Short_Offset"+LSParameter.Long_Short_Offset.pythonValue() +".root"
@@ -167,7 +167,15 @@ process.calibPreSequence = cms.Sequence(process.boolTrue)
 #process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs + process.dump + process.rctDigis )
 
 if( isData):
-    process.p = cms.Path(process.reconstructionFromRawSequence+ process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis + process.DataAna+process.FullGraph)
+    process.p = cms.Path(
+    process.reconstructionFromRawSequence+ process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis
+    )
 else:
     process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs)
+
+
+process.out_step = cms.EndPath(process.out)
+
+process.schedule = cms.Schedule(process.p,process.out_step)
+
 
