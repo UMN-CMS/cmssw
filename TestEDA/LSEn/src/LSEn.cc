@@ -87,7 +87,7 @@ private:
 
 LSEn::LSEn(const edm::ParameterSet& iConfig) {
     edm::Service<TFileService> fs;
-    LgStEDep=fs->make<TH2F>("Long_vrs_Short_Energy","Long_vrs_Short_Energy;LongEnergy;ShortEnergy",60,0,60,60,0,60);
+    LgStEDep=fs->make<TH2F>("Long_vrs_Short_Energy","Long_vrs_Short_Energy;LongEnergy;ShortEnergy",150,50,1550,150,0,1500);
     //now do what ever initialization is needed
 }
 
@@ -115,10 +115,14 @@ LSEn::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
   edm::Handle<HFDigiCollection>   hf_digi;
 
-  iEvent.getByLabel("hcalDigis",hf_digi);
+  if(!iEvent.getByLabel("hcalDigis",hf_digi)) return;
+  
     for(unsigned ihit = 0; ihit < hf_digi->size(); ++ihit)
     {
         const HFDataFrame& longfib = (*hf_digi)[ihit]; //should be long fiber short depth
+        
+        
+        
         
         if(longfib.id().depth() != 1||abs(longfib.id().ieta())<30||abs(longfib.id().ieta())>39)continue; //so this makes it so that if we are not at depth zero, that it will continue, so we don't double
         //int ieta = longfib.id().ieta();
@@ -128,22 +132,34 @@ LSEn::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         
         HFDigiCollection::const_iterator shortFib = hf_digi->find(shortFibId);
         //cout<<"test 6"<<endl;
-        if(shortFib->id().ieta()==0)continue;
+        //if(shortFib->id().ieta()==0)continue;
+        if(shortFib == hf_digi->end())continue;
          //cout<<"test 5"<<endl;
          //cout<<"depth"<<longfib.id().depth()<<endl;
          
          if(shortFib->id().ieta()!=longfib.id().ieta()||shortFib->id().iphi()!=longfib.id().iphi()||shortFib->id().depth()!=2)continue;
         //should do the HCalQIESample for the short fiber
         //inputs data into digi.
+        //cout<<"iphi :"<<shortFib->id().iphi()<<"  and ieta :"<<longfib.id().ieta()<<endl;
         const HcalCalibrations& calibrations = conditions->getHcalCalibrations(shortFib->id());
         
         // so this next part is a guess not 100 percent sure how to make this work
         const HcalQIECoder* channelCoderS = conditions->getHcalCoder(shortFib->id());
         
+        if(channelCoderS==0)
+        {
+            cout<<"channelCoderS "<<endl;
+            return;
+        }
         const HcalQIEShape* shapeS = conditions->getHcalShape(channelCoderS);
 
+        if(shapeS==0)
+        {cout<<" shapeS"<<endl;
+            return;
+        }
         HcalCoderDb coders(*channelCoderS, *shapeS); //magic piece of code
 
+  
         CaloSamples tools;
         coders.adc2fC((*shortFib), tools); // this step takes short fiber digi and tools and fills tools with the linadc
         
@@ -161,7 +177,17 @@ LSEn::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         CaloSamples tool_l;
 
         const HcalQIECoder* channelCoderL = conditions->getHcalCoder(longfib.id());
+        if(channelCoderL==0)
+        {
+            cout<<" channelCoderL "<<endl;
+            return;
+        }
         const HcalQIEShape* shapeL = conditions->getHcalShape(channelCoderL);
+        if(shapeL==0)
+        {
+            cout<<" shapeL "<<endl;
+            return;
+        }
 
         HcalCoderDb coderL(*channelCoderL, *shapeL);
         coderL.adc2fC(longfib, tool_l); // this fills tool_l[0] with linearized adc
