@@ -671,7 +671,7 @@ void DataLumiComp(string FileOrgin)
     c1->cd();
 
     c1->SetLogy();
-    ProfNoFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
+    ProfNoFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/#mub");
     ProfNoFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
     ProfNoFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfNoFineTrigCalcLum->Draw();
@@ -702,7 +702,7 @@ void DataLumiComp(string FileOrgin)
     }
 
     c2->SetLogy();
-    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
+    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/#mub");
     ProfFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
     ProfFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfFineTrigCalcLum->Draw();
@@ -749,7 +749,7 @@ void DataLumiComp(string FileOrgin)
     c3->SetFillColor(10);
     c3->cd();
     c3->SetLogz();
-    NormPrimFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/Ub");
+    NormPrimFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/#mub");
     NormPrimFineTrigCanLum.GetYaxis()->SetTitleOffset(1.5);
     NormPrimFineTrigCanLum.GetYaxis()->SetTitle("Number of Trigger Candidates");
     NormPrimFineTrigCanLum.Draw("COLZ");
@@ -766,7 +766,7 @@ void DataLumiComp(string FileOrgin)
     c4->SetFillColor(10);
     c4->cd();
     c4->SetLogz();
-    NormPrimNoFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/Ub");
+    NormPrimNoFineTrigCanLum.GetXaxis()->SetTitle("luminosity Hz/#mub");
     NormPrimNoFineTrigCanLum.GetYaxis()->SetTitleOffset(1.5);
     NormPrimNoFineTrigCanLum.GetYaxis()->SetTitle("Number of Trigger Candidates");
     //NormPrimNoFineTrigCanLum.GetXaxis()->SetTimeOffset(.15);
@@ -786,7 +786,7 @@ void DataLumiComp(string FileOrgin)
     
 
     c5->SetLogy();
-    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/Ub");
+    ProfFineTrigCalcLum->GetXaxis()->SetTitle("luminosity Hz/#mub");
     ProfFineTrigCalcLum->GetYaxis()->SetTitleOffset(1.5);
     ProfFineTrigCalcLum->GetYaxis()->SetTitle("Number of Trigger Candidates");
     ProfFineTrigCalcLum->SetMarkerColor(kBlue+1);

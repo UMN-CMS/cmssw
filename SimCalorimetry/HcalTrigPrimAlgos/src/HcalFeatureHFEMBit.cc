@@ -7,6 +7,7 @@
 #include "CalibFormats/HcalObjects/interface/HcalCoderDb.h"
 
 
+
 HcalFeatureHFEMBit::HcalFeatureHFEMBit(double ShortMinE, double LongMinE,
         double ShortLongCutSlope, double ShortLongCutOffset, const HcalDbService& conditions) : conditions_(conditions)
 {
@@ -59,7 +60,7 @@ bool HcalFeatureHFEMBit::fineGrainbit(int ADCShort, HcalDetId Sid, int CapIdS, i
     coderL.adc2fC(longf, tool_l); // this fills tool_l[0] with linearized adc
     LongE = (tool_l[0] - calibrationL.pedestal(CapIdL)) * calibrationL.respcorrgain(CapIdL);
 
-    
+   
     // this actually does the cut
     if((ShortE < ((LongE)-(ShortLongCutOffset_)) * ShortLongCutSlope_) && LongE > LongMinE_ && ShortE > ShortMinE_) return true;
     else return false;

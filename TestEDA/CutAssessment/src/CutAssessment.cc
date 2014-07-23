@@ -91,10 +91,11 @@ private:
     TFile* PrimDigiCut;
     TH1 *EtPassedElectron, *EtPassedNonElectron, *EtRatioPassedElectron, *EtRatioPassedNonElectron;
     TH1 *EtAllPassedElectron, *EtAllRatioPassedElectron;
-    TH2 *Etvrs3X3;
-
+    TH1 *Seedoverbackround;
+    TH2 *Etvrs3X3Fine, *Etvrs3X3NoFine;
+    TH2 *SeedPrimVrs3X3Fine, *SeedPrimVrs3X3NoFine;
     TH2 *ElectonEtCompEt;
-    TH2 *ElectronETunC;
+    TH2 *comp3X3VS5X5Fine, *comp3X3VS5X5NoFine;
     double GenEtPos[20][72];
     double GenEtNeg[20][72];
     double CompEtPos[20][72];
@@ -153,15 +154,20 @@ CutAssessment::CutAssessment(const edm::ParameterSet& iConfig)
     EtRatioPassedElectron = fine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 100, 0, 1.01);
     EtRatioPassedNonElectron = fine.make<TH1F>("Et_Ratio_of_NonElectron", "Et_Ratio_of_NonElectron", 100, 0, 1.01);
     EtAllRatioPassedElectron = nofine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 100, 0, 1.01);
-    Etvrs3X3 = nofine.make<TH2F>("centervrsdenominator", "centervrsdenominator;et;denominator", 120, 0, 120, 120, 0, 120);
+    Etvrs3X3Fine = fine.make<TH2F>("centervrsdenominator", "centervrsdenominator;et;denominator", 120, 0, 120, 120, 0, 120);
+    Etvrs3X3NoFine = nofine.make<TH2F>("centervrsdenominator", "centervrsdenominator;et;denominator", 120, 0, 120, 120, 0, 120);
     ElectonEtCompEt = fs->make<TH2F>("compressed_VS_Generated", "compressed_VS_Generated; Comp; Gen(Et)", 120, 0, 120, 150, 0, 150);
-    ElectronETunC = fs->make<TH2F>("ETuncomp_VS_Generated", "ETuncomp_VS_Generated; Uncompressed; Gen(Et)", 120, 0, 120, 150, 0, 150);
+    //ElectronETunC = fs->make<TH2F>("ETuncomp_VS_Generated", "ETuncomp_VS_Generated; Uncompressed; Gen(Et)", 120, 0, 120, 150, 0, 150);
+    SeedPrimVrs3X3Fine = fine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 100, 0, 100, 100, 0, 100);
+    SeedPrimVrs3X3NoFine = nofine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 100, 0, 100, 100, 0, 100);
+    comp3X3VS5X5Fine = fine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 100, 0, 100, 100, 0, 100);
+    comp3X3VS5X5NoFine = nofine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 100, 0, 100, 100, 0, 100);
     Passed = 0;
     Failed = 0;
     Backround = 0;
     TotalReal = 0;
-    PassedAll= 0;
-    BackroundAll =0;
+    PassedAll = 0;
+    BackroundAll = 0;
     cout << "test 2" << endl;
 }
 
@@ -202,8 +208,8 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByLabel("genParticles", genInfo);
     Real2I = new Genconverter();
 
-    
-    
+
+
     for(int i = 0; i < 10; i++)
     {
         for(int k = 0; k < 72; k += 2)
@@ -215,7 +221,7 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         }
     }
 
-    
+
 
     for(unsigned ighit = 0; ighit < genInfo->size(); ++ighit)// so this function goes and figures out the location of all electron location to allow matching4
     {
@@ -255,12 +261,12 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
 
-if(TotalReal < PassedAll)
-    {
-        cout << "test 4" << endl;
-        int k;
-        cin >> k;
-    }
+        if(TotalReal < PassedAll)
+        {
+            cout << "test 4" << endl;
+            int k;
+            cin >> k;
+        }
 
 
 
@@ -284,8 +290,8 @@ if(TotalReal < PassedAll)
                     numEPass++;
                     if(fine)Passed++;
                     else PassedAll++;
-                    if(PCuts.MaxEtPos[ieta][iphi]<10)
-                        cout<<"well thats odd"<<endl;
+                    if(PCuts.MaxEtPos[ieta][iphi] < 10)
+                        cout << "well thats odd" << endl;
 
 
                     if(numEPass > numElect)
@@ -299,38 +305,50 @@ if(TotalReal < PassedAll)
                     //cout << "and the center is " << PCuts.MaxEtPos[ieta][iphi] << endl;
                     double ratio = 0;
                     double bottom = 0;
-                    if(iphi != 1 && iphi != 71)
-                    {
-                        bottom = double (PCuts.MaxEtPos[ieta][iphi - 2] + PCuts.MaxEtPos[ieta][iphi] + PCuts.MaxEtPos[ieta][iphi + 2]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][iphi - 2] + PCuts.MaxEtPos[ieta + 1][iphi] + PCuts.MaxEtPos[ieta + 1][iphi + 2]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][iphi - 2] + PCuts.MaxEtPos[ieta - 1][iphi] + PCuts.MaxEtPos[ieta - 1][iphi + 2]);
-                    } else if(iphi == 1)
-                    {
-                        bottom = double (PCuts.MaxEtPos[ieta][71] + PCuts.MaxEtPos[ieta][1] + PCuts.MaxEtPos[ieta][3]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][71] + PCuts.MaxEtPos[ieta + 1][1] + PCuts.MaxEtPos[ieta + 1][3]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][71] + PCuts.MaxEtPos[ieta - 1][1] + PCuts.MaxEtPos[ieta - 1][3]);
 
-                    } else if(iphi == 71)
+                    double T5X5 = 0;
+                    double seed = 0;
+                    for(int i = -2; i < 3; i++)
                     {
-                        bottom = double (PCuts.MaxEtPos[ieta][69] + PCuts.MaxEtPos[ieta][71] + PCuts.MaxEtPos[ieta][1]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][69] + PCuts.MaxEtPos[ieta + 1][71] + PCuts.MaxEtPos[ieta + 1][1]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][69] + PCuts.MaxEtPos[ieta - 1][71] + PCuts.MaxEtPos[ieta - 1][1]);
+                        for(int w = -2; w < 3; w++)
+                        {
+                            int iphip = iphi + i * 2;
+                            int ietap = ieta + w;
+                            if(iphip == 73)iphip = 1;
+                            if(iphip == 75)iphip = 3;
+                            if(iphip == -1)iphip = 71;
+                            if(iphip == -3)iphip = 69;
+                            if(ietap > 9 || ietap < 0)
+                            {
+                                ietap = 0;
+                                iphip = 0;
+                            }
+                            if(PCuts.MaxEtPos[ietap][iphip] > seed && abs(i) < 2 && abs(w) < 2)
+                            {
+                              if(i!=0&&w!=0) seed = PCuts.MaxEtPos[ietap][iphip];
+                                bottom += PCuts.MaxEtPos[ietap][iphip];
+                            }
+                            T5X5 += PCuts.MaxEtPos[ietap][iphip];
+                        }
                     }
+
+                    if(seed*2<PCuts.MaxEtPos[ieta][iphi])seed=0;
                     ratio = double(PCuts.MaxEtPos[ieta][iphi]) / (bottom);
                     if(fine)
                     {
                         EtPassedElectron->Fill(PCuts.MaxEtPos[ieta][iphi]);
                         EtRatioPassedElectron->Fill(ratio);
+                        comp3X3VS5X5Fine->Fill(bottom, T5X5);
                     } else
                     {
                         EtAllPassedElectron->Fill(PCuts.MaxEtPos[ieta][iphi]);
 
                         EtAllRatioPassedElectron->Fill(ratio);
-                        if(PCuts.MaxEtPos[ieta][iphi]>10)
-                        {
-                        ElectonEtCompEt->Fill(PCuts.MaxEtPos[ieta][iphi]*2, GenEtPos[ieta][iphi]);
-                        ElectronETunC->Fill(PCuts.MaxEtPos[ieta][iphi], GenEtPos[ieta][iphi]);
-                        }
+
+
+                        ElectonEtCompEt->Fill(PCuts.MaxEtPos[ieta][iphi], GenEtPos[ieta][iphi]);
+                        comp3X3VS5X5NoFine->Fill(bottom, T5X5);
+
                     }
                     if(ratio > 1 || ratio < 0)
                     {
@@ -338,49 +356,23 @@ if(TotalReal < PassedAll)
                         cout << " and our phi is " << iphi << endl;
                     }
 
-                } else if(PCuts.LocMaxPos[ieta][iphi]&&!ElecIniEvent)
-                {
-                    if(fine)Backround++;
-                    else BackroundAll++;
-                    EtPassedNonElectron->Fill(PCuts.MaxEtPos[ieta][iphi]);
-
-                    double bottom = 0;
-                    double ratio = 0;
-                    if(iphi != 1 && iphi != 71)
-                    {
-                        bottom = double (PCuts.MaxEtPos[ieta][iphi - 2] + PCuts.MaxEtPos[ieta][iphi] + PCuts.MaxEtPos[ieta][iphi + 2]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][iphi - 2] + PCuts.MaxEtPos[ieta + 1][iphi] + PCuts.MaxEtPos[ieta + 1][iphi + 2]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][iphi - 2] + PCuts.MaxEtPos[ieta - 1][iphi] + PCuts.MaxEtPos[ieta - 1][iphi + 2]);
-                    } else if(iphi == 1)
-                    {
-                        bottom = double (PCuts.MaxEtPos[ieta][71] + PCuts.MaxEtPos[ieta][1] + PCuts.MaxEtPos[ieta][3]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][71] + PCuts.MaxEtPos[ieta + 1][1] + PCuts.MaxEtPos[ieta + 1][3]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][71] + PCuts.MaxEtPos[ieta - 1][1] + PCuts.MaxEtPos[ieta - 1][3]);
-
-                    } else if(iphi == 71)
-                    {
-                        bottom = double (PCuts.MaxEtPos[ieta][69] + PCuts.MaxEtPos[ieta][71] + PCuts.MaxEtPos[ieta][1]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtPos[ieta + 1][69] + PCuts.MaxEtPos[ieta + 1][71] + PCuts.MaxEtPos[ieta + 1][1]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtPos[ieta - 1][69] + PCuts.MaxEtPos[ieta - 1][71] + PCuts.MaxEtPos[ieta - 1][1]);
-                    }
-                    ratio = double(PCuts.MaxEtPos[ieta][iphi]) / (bottom);
-                    EtRatioPassedNonElectron->Fill(ratio);
-                    if(ratio < .1)
-                    {
-                        cout << "so our ratio is " << ratio << endl;
-                        cout << "bottom is " << bottom << endl;
-                        cout << "and our ieta is " << ieta << endl;
-                        cout << " our iphi is " << iphi << endl << endl;
-                    }
                 }
-
+                
+                
+                
+                
+                
+                
+                
+                
+                ///////////////
                 if(PCuts.LocMaxNeg[ieta][iphi] && gparts.find(make_pair(-ieta - 30, iphi)) != gparts.end())//says if an electron hit in the isolated region.
                 {
                     numEPass++;
 
-                    if(PCuts.MaxEtNeg[ieta][iphi]<10)
-                        cout<<"so the negatives are the problem"<<endl;
-                    
+                    if(PCuts.MaxEtNeg[ieta][iphi] < 10)
+                        cout << "so the negatives are the problem" << endl;
+
                     if(numEPass > numElect)
                     {
                         cout << "our ieta is -" << ieta << " and our iphi is :" << iphi << endl;
@@ -394,23 +386,33 @@ if(TotalReal < PassedAll)
 
                     double ratio = 0;
                     double bottom = 0;
-                    if(iphi != 1 && iphi != 71)
+                    double T5X5 = 0;
+                    double seed = 0;
+                    
+                    for(int i = -2; i < 3; i++)
                     {
-                        bottom = double (PCuts.MaxEtNeg[ieta][iphi - 2] + PCuts.MaxEtNeg[ieta][iphi] + PCuts.MaxEtNeg[ieta][iphi + 2]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][iphi - 2] + PCuts.MaxEtNeg[ieta + 1][iphi] + PCuts.MaxEtNeg[ieta + 1][iphi + 2]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][iphi - 2] + PCuts.MaxEtNeg[ieta - 1][iphi] + PCuts.MaxEtNeg[ieta - 1][iphi + 2]);
-                    } else if(iphi == 1)
-                    {
-                        bottom = double (PCuts.MaxEtNeg[ieta][71] + PCuts.MaxEtNeg[ieta][1] + PCuts.MaxEtNeg[ieta][3]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][71] + PCuts.MaxEtNeg[ieta + 1][1] + PCuts.MaxEtNeg[ieta + 1][3]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][71] + PCuts.MaxEtNeg[ieta - 1][1] + PCuts.MaxEtNeg[ieta - 1][3]);
-
-                    } else if(iphi == 71)
-                    {
-                        bottom = double (PCuts.MaxEtNeg[ieta][69] + PCuts.MaxEtNeg[ieta][71] + PCuts.MaxEtNeg[ieta][1]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][69] + PCuts.MaxEtNeg[ieta + 1][71] + PCuts.MaxEtNeg[ieta + 1][1]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][69] + PCuts.MaxEtNeg[ieta - 1][71] + PCuts.MaxEtNeg[ieta - 1][1]);
+                        for(int w = -2; w < 3; w++)
+                        {
+                            int iphip = iphi + i * 2;
+                            int ietap = ieta + w;
+                            if(iphip == 73)iphip = 1;
+                            if(iphip == 75)iphip = 3;
+                            if(iphip == -1)iphip = 71;
+                            if(iphip == -3)iphip = 69;
+                            if(ietap > 9 || ietap < 0)
+                            {
+                                ietap = 0;
+                                iphip = 0;
+                            }
+                            if(PCuts.MaxEtNeg[ietap][iphip] > seed && abs(i) < 2 && abs(w) < 2)
+                            {
+                              if(i!=0&&w!=0) seed = PCuts.MaxEtNeg[ietap][iphip];
+                                bottom += PCuts.MaxEtNeg[ietap][iphip];
+                            }
+                            T5X5 += PCuts.MaxEtNeg[ietap][iphip];
+                        }
                     }
+                    if(seed*2<PCuts.MaxEtNeg[ieta][iphi])seed=0;
                     ratio = double(PCuts.MaxEtNeg[ieta][iphi]) / (bottom);
                     if(fine)EtPassedElectron->Fill(PCuts.MaxEtNeg[ieta][iphi]);
                     else EtAllPassedElectron->Fill(PCuts.MaxEtNeg[ieta][iphi]);
@@ -420,28 +422,19 @@ if(TotalReal < PassedAll)
                     if(fine)
                     {
                         EtRatioPassedElectron->Fill(ratio);
-                        Etvrs3X3->Fill(PCuts.MaxEtNeg[ieta][iphi], bottom);
+                        Etvrs3X3Fine->Fill(PCuts.MaxEtNeg[ieta][iphi], bottom);
+                        comp3X3VS5X5Fine->Fill(bottom, T5X5);
                     } else
                     {
                         EtAllRatioPassedElectron->Fill(ratio);
-                        if(PCuts.MaxEtNeg[ieta][iphi]>10)
+                        comp3X3VS5X5NoFine->Fill(bottom, T5X5);
+                        Etvrs3X3NoFine->Fill(PCuts.MaxEtNeg[ieta][iphi], bottom);
+                        if(PCuts.MaxEtNeg[ieta][iphi] > 10)
                         {
-                        ElectonEtCompEt->Fill(PCuts.MaxEtNeg[ieta][iphi]*2, GenEtNeg[ieta][iphi]);
-                        ElectronETunC->Fill(PCuts.MaxEtNeg[ieta][iphi], GenEtNeg[ieta][iphi]);
+                            ElectonEtCompEt->Fill(PCuts.MaxEtNeg[ieta][iphi], GenEtNeg[ieta][iphi]);
+                            // ElectronETunC->Fill(PCuts.MaxEtNeg[ieta][iphi], GenEtNeg[ieta][iphi]);
                         }
-                        if(ieta > 0 && ieta < 9 && PCuts.LocMaxNeg[ieta][iphi] && iphi != 1 && iphi != 71 && false)
-                        {
-                            cout << "LocMax is :" << PCuts.MaxEtNeg[ieta][iphi] << endl;
-                            cout << "upleft is :" << PCuts.MaxEtNeg[ieta + 1][iphi - 2] << endl;
-                            cout << "upcent is :" << PCuts.MaxEtNeg[ieta + 1][iphi] << endl;
-                            cout << "upright is :" << PCuts.MaxEtNeg[ieta + 1][iphi + 2] << endl;
-                            cout << "left :" << PCuts.MaxEtNeg[ieta][iphi - 2] << endl;
-                            cout << "right :" << PCuts.MaxEtNeg[ieta][iphi + 2] << endl;
-                            cout << "botleft is :" << PCuts.MaxEtNeg[ieta - 1][iphi - 2] << endl;
-                            cout << "botcent is :" << PCuts.MaxEtNeg[ieta - 1][iphi] << endl;
-                            cout << "botright is :" << PCuts.MaxEtNeg[ieta - 1][iphi + 2] << endl;
-                            cout << "denominator :" << bottom << endl << endl << endl;
-                        }
+
                     }
                     if(ratio > 1 || ratio < 0)
                     {
@@ -451,40 +444,7 @@ if(TotalReal < PassedAll)
 
 
 
-                } else if(PCuts.LocMaxNeg[ieta][iphi]&&!ElecIniEvent)
-                {
-                    if(fine)Backround++;
-                    else BackroundAll++;
-                    EtPassedNonElectron->Fill(PCuts.MaxEtNeg[ieta][iphi]);
-                    double ratio = 0;
-                    double bottom = 0;
-                    if(iphi != 1 && iphi != 71)
-                    {
-                        bottom = double (PCuts.MaxEtNeg[ieta][iphi - 2] + PCuts.MaxEtNeg[ieta][iphi] + PCuts.MaxEtNeg[ieta][iphi + 2]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][iphi - 2] + PCuts.MaxEtNeg[ieta + 1][iphi] + PCuts.MaxEtNeg[ieta + 1][iphi + 2]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][iphi - 2] + PCuts.MaxEtNeg[ieta - 1][iphi] + PCuts.MaxEtNeg[ieta - 1][iphi + 2]);
-                    } else if(iphi == 1)
-                    {
-                        bottom = double (PCuts.MaxEtNeg[ieta][71] + PCuts.MaxEtNeg[ieta][1] + PCuts.MaxEtNeg[ieta][3]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][71] + PCuts.MaxEtNeg[ieta + 1][1] + PCuts.MaxEtNeg[ieta + 1][3]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][71] + PCuts.MaxEtNeg[ieta - 1][1] + PCuts.MaxEtNeg[ieta - 1][3]);
 
-                    } else if(iphi == 71)
-                    {
-                        bottom = double (PCuts.MaxEtNeg[ieta][69] + PCuts.MaxEtNeg[ieta][71] + PCuts.MaxEtNeg[ieta][1]);
-                        if(ieta != 9) bottom += double (PCuts.MaxEtNeg[ieta + 1][69] + PCuts.MaxEtNeg[ieta + 1][71] + PCuts.MaxEtNeg[ieta + 1][1]);
-                        if(ieta != 0)bottom += double (PCuts.MaxEtNeg[ieta - 1][69] + PCuts.MaxEtNeg[ieta - 1][71] + PCuts.MaxEtNeg[ieta - 1][1]);
-                    }
-                    ratio = double(PCuts.MaxEtNeg[ieta][iphi]) / (bottom);
-                    EtRatioPassedNonElectron->Fill(ratio);
-
-                    if(ratio < .1)
-                    {
-                        cout << "so our ratio is " << ratio << endl;
-                        cout << "bottom is " << bottom << endl;
-                        cout << "and our -ieta is " << ieta << endl;
-                        cout << " our iphi is " << iphi << endl << endl;
-                    }
                 }
             }
         }
@@ -525,7 +485,8 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
             featurebitNeg[ietac][iphi] = false;
         }
     }
-
+    CutInfo.MaxEtPos[0][0] = 0; //so I am putting one of these to zero so that I could just change to a specific ieta iphi if I want zero.
+    CutInfo.MaxEtNeg[0][0] = 0;
     edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
     iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
     //cout<<" test 2"<<endl;
@@ -535,11 +496,11 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
 
         double MaxEt = 0;
         //int MaxCEt = 0;
-        
+
         //if(!tp->SOI_fineGrain() && UseFine)continue;
-        
+
         MaxEt = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
-        if(MaxEt*2!=tp->SOI_compressedEt())cout<<" the correction factor is :"<<MaxEt/tp->SOI_compressedEt()<<endl;
+        if(MaxEt * 2 != tp->SOI_compressedEt())cout << " the correction factor is :" << MaxEt / tp->SOI_compressedEt() << endl;
         if(tp->id().ieta() > 0)//delete
         {
 
@@ -607,7 +568,7 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
 
 
 
-            CutInfo.LocMaxNeg[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][iphi]> MinSeed && featurebitNeg[ietac][iphi]);
+            CutInfo.LocMaxNeg[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][iphi] > MinSeed && featurebitNeg[ietac][iphi]);
 
         }
         bool upleft = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac + 1][71] || ietac == 9;
@@ -618,7 +579,7 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
         bool botleft = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][71] || ietac == 0;
         bool botcent = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][1] || ietac == 0;
         bool botright = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][3] || ietac == 0;
-        CutInfo.LocMaxNeg[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][1]> MinSeed  && featurebitNeg[ietac][1]);
+        CutInfo.LocMaxNeg[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][1] > MinSeed && featurebitNeg[ietac][1]);
 
         upleft = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac + 1][69] || ietac == 9;
         upcent = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac + 1][71] || ietac == 9;
@@ -636,7 +597,7 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
 }
 
 void
-CutAssessment::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
+CutAssessment::fillDescriptions(edm::ConfigurationDescriptions & descriptions)
 {
     //The following says we do not know what parameters are allowed so do no validation
     // Please change this to state exactly what you do use, even if it is no parameters
