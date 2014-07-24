@@ -125,22 +125,23 @@ JetAlgorithm::~JetAlgorithm() {
 void
 JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-     cout << "beginning";
+//     cout << "beginning";
      using namespace edm;
 
 //     cout << "test \n";              //this cout statement does display
 
-     double EtArray [40][40];
+     double EtArrayPos [40][72];
+     double EtArrayNeg [40][72];
 
      edm::ESHandle<CaloTPGTranscoder> outTranscoder;
      iSetup.get<CaloTPGRecord>().get(outTranscoder);
      outTranscoder->setup(iSetup, CaloTPGTranscoder::HcalTPG);
-     cout << "finished outTranscoder";
+//     cout << "finished outTranscoder";
      // This initialization and loop is really all I care about.  I just need to save the MaxEt in an array. by eta and phi.
      // Also, I need to convert from compressed Et to real Et: I think this is done by the outTranscoder.  This sequence may need modification pending talking to Zach
      edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
      iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
-     cout << "Just before loop \n";
+//     cout << "Just before loop \n";
      if(hfpr_digi->begin()==hfpr_digi->end())
      {
          cout << "empty";
@@ -156,10 +157,18 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
              continue;    //Grabs the useful part of HF
          }
          //We need the sample of interest (SOI)
-         EtArray [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
-         cout << EtArray [1][1]*0;          //this cout statement does not display
+         if(tp->id().ieta() < 0)
+	 {
+             EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+	 }
+	 else
+	 {
+	     EtArrayPos [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+         }
+	 cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
+	 cout << EtArrayPos [1][1]*EtArrayNeg [1][1]*0;          //this cout statement does not display
      }
-     cout << "\nJust after loop \n";
+//     cout << "\nJust after loop \n";
 }
 void
 JetAlgorithm::beginJob() { }
