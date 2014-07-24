@@ -89,14 +89,11 @@ private:
 
     int passed;
     int failed;
-    int lumi;
     TH1 *PrimPassEt, *PrimPassRatioEt;
     TH1 *HitsEventfine, *HitsEventNo;
     TH1 *PrimAllPassEt, *PrimAllPassRatioEt;
     TH2 *PrimPassEtvrsiEta, *PrimPassEtvrsiPhi;
 
-    TH2 *PrimFineTrigCanLum, *PrimNoFineTrigCanLum;
-    
     struct PrimDigiUse
     {
         bool LocMaxPos[50][73];
@@ -105,13 +102,11 @@ private:
         double MaxEtNeg[50][73];
     };
 
-    double GenEtPos[20][72];
-    double GenEtNeg[20][72];
     PrimDigiUse PrimInfo(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool UseFine);
 
     //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
     //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-    virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+    //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
     //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
     // ----------member data ---------------------------
@@ -132,24 +127,20 @@ private:
 DataAnalizer::DataAnalizer(const edm::ParameterSet& iConfig)
 {
     edm::Service<TFileService> fs;
+    cout<<"test 1"<<endl;
     TFileDirectory fine = fs->mkdir("finebit");
     TFileDirectory nofine = fs->mkdir("no_fine");
     PrimPassEt = fine.make<TH1F>("Et", "Et;Et;Count", 200, 0, 100);
     PrimPassRatioEt = fine.make<TH1F>("EtRatio", "EtRatio;Et/3X3", 200, 0, 1.001);
     PrimPassEtvrsiEta = fine.make<TH2F>("EtaVrsEt", "EtaVrsEt;Eta;Et", 10, 29.9, 39.9, 120, 0, 60);
     PrimPassEtvrsiPhi = fine.make<TH2F>("PhiVrsEt", "PhiVrsEt;Phi;Et", 36, 0, 72, 120, 0, 60);
-    PrimFineTrigCanLum = fine.make<TH2F>("Luminosity_Vrs_Trig_Candidates","Luminosity_Vrs_Trig_Candidates; Luminosity ;Trigger_Candidates",30,1900,7900,10,0,10.01);
-    
-    HitsEventfine = fine.make<TH1I>("Hits", "Hits", 10.1, 0, 10);
+    HitsEventfine = fine.make<TH1I>("Hits", "Hits", 100, 0, 100);
 
     PrimAllPassEt = nofine.make<TH1F>("Et", "Et;Et;Count", 200, 0, 100);
     PrimAllPassRatioEt = nofine.make<TH1F>("EtRatio", "EtRatio;Et/3X3", 200, 0, 1.001);
-    
-    HitsEventNo = nofine.make<TH1I>("Hits", "Hits", 10.1, 0, 10);
-    PrimNoFineTrigCanLum = nofine.make<TH2F>("Luminosity_Vrs_Trig_Candidates","Luminosity_Vrs_Trig_Candidates; Luminosity ;Trigger_Candidates",30,1900,7900,10,0,10.01);
+    HitsEventNo = nofine.make<TH1I>("Hits", "Hits", 100, 0, 100);
     passed = 0;
     failed = 0;
-    lumi = 0;
     //now do what ever initialization is needed
 }
 
@@ -171,12 +162,10 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using namespace edm;
     bool fine = false;
-    //int test=0;
-    //cout<<" ls number :"<<iEvent.luminosityBlock()<<endl;
+
     for(int q = 0; q < 2; q++)
     {
         int hit = 0;
-        
         PrimDigiUse PCuts = PrimInfo(iEvent, iSetup, fine);
         double bottom = 0;
         double ratio = 0;
@@ -184,7 +173,6 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         {
             for(int iphi = 1; iphi < 72; iphi += 2)
             {
-            //if(!fine)cout<<"energy :"<<PCuts.MaxEtPos[ieta][iphi]<<endl;
                 if(PCuts.LocMaxPos[ieta][iphi])
                 {
                     if(iphi != 1 && iphi != 71)
@@ -208,17 +196,17 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     if(fine)
                     {
-                        hit++;
-                        //cout<<" hit number :"<<hit<<endl;
-                        PrimPassEt->Fill(PCuts.MaxEtPos[ieta][iphi]);
-                        PrimPassRatioEt->Fill(ratio);
+
+                        PrimPassEtvrsiEta->Fill(30 + ieta, PCuts.MaxEtPos[ieta][iphi]);
+                        PrimPassEtvrsiPhi->Fill(iphi, PCuts.MaxEtPos[ieta][iphi]);
+                        PrimPassEtvrsiEta->Fill(30 + ieta, PCuts.MaxEtNeg[ieta][iphi]);
+                        PrimPassEtvrsiPhi->Fill(iphi, PCuts.MaxEtNeg[ieta][iphi]);
                     } else
                     {
-                        hit++;
                         PrimAllPassEt->Fill(PCuts.MaxEtPos[ieta][iphi]);
                         PrimAllPassRatioEt->Fill(ratio);
                     }
-                    
+                    hit++;
                     if(PCuts.MaxEtPos[ieta][iphi] == 0)
                     {
                         cout << "this should not happen" << endl;
@@ -258,30 +246,21 @@ DataAnalizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     }
                     if(fine)
                     {
-                        hit++;
-                        //cout<<" hit number :"<<hit<<endl;
                         PrimPassEt->Fill(PCuts.MaxEtNeg[ieta][iphi]);
                         PrimPassRatioEt->Fill(ratio);
-
+                        PrimPassEtvrsiEta->Fill(30 + ieta, PCuts.MaxEtNeg[ieta][iphi]);
+                        PrimPassEtvrsiPhi->Fill(iphi, PCuts.MaxEtNeg[ieta][iphi]);
                     } else
                     {
-                        hit++;
                         PrimAllPassEt->Fill(PCuts.MaxEtNeg[ieta][iphi]);
                         PrimAllPassRatioEt->Fill(ratio);
                     }
-                    
+                    hit++;
                 }
             }
         }
-        if(fine)
-        {HitsEventfine->Fill(hit);
-        PrimFineTrigCanLum->Fill(lumi,hit);
-        }
-        else 
-        {HitsEventNo->Fill(hit);
-        PrimNoFineTrigCanLum->Fill(lumi,hit);
-        }
-        hit=0;
+        if(fine)HitsEventfine->Fill(hit);
+        else HitsEventNo->Fill(hit);
         fine = true;
     }
 }
@@ -316,42 +295,60 @@ DataAnalizer::endRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
 void 
-DataAnalizer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+DataAnalizer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
  */
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 
-void
-DataAnalizer::beginLuminosityBlock(edm::LuminosityBlock const& lumiBlock, edm::EventSetup const& es)
+/*void DataAnalizer::endLuminosityBlock(edm::LuminosityBlock const& lumiBlock, edm::EventSetup const& es)
 {
-    edm::Handle<LumiSummary> lumisummary; //get the raw lumi data from edm::LumiSummary
-    lumiBlock.getByLabel("lumiProducer", lumisummary);
-    float instlumi = lumisummary->avgInsDelLumi();
-    float correctedinstlumi = instlumi;
-    float recinstlumi = lumisummary->avgInsRecLumi();
-    float corrfac = 1.;
-    edm::ESHandle<LumiCorrectionParam> datahandle; //get LumiCorrectionParam object from event setup
-    es.getData(datahandle);
-    if(datahandle.isValid())
+    cout << " I AM IN RUN NUMBER " << lumiBlock.run() << " LS NUMBER " << lumiBlock.luminosityBlock() << std::endl;
+    edm::eventsetup::EventSetupRecordKey recordKey(edm::eventsetup::EventSetupRecordKey::TypeTag::findType("LumiCorrectionParamRcd"));
+    if(recordKey.type() == edm::eventsetup::EventSetupRecordKey::TypeTag())
     {
-        const LumiCorrectionParam* mydata = datahandle.product();
-        //std::cout << "correctionparams " << *mydata << std::endl;
-        corrfac = mydata->getCorrection(instlumi); //get lumi correction factor. Note: the corrfac is dependent of the average inst lumi value of the LS
-    } else
-    {
-        std::cout << "no valid record found" << std::endl;
+        std::cout << "Record \"LumiCorrectionParamRcd" << "\" does not exist " << std::endl;
     }
-    correctedinstlumi = instlumi*corrfac; //final lumi value=correction*raw lumi value
-    float correctedinstRecLumi = recinstlumi*corrfac; //Note: the correction factor is a function of raw inst delivered lumi. 
-    //cout << "okay so this is the recinstlumi assuming no correction" << recinstlumi << endl;
-    //cout << " and the instlumi is :" << instlumi << endl;
-    //cout<<"correctedinstlumi :"<<correctedinstlumi;
-    cout<<"correctedinstRecLumi :"<<correctedinstRecLumi<<endl;
-    lumi=correctedinstlumi;
+    try
+    {
+        cout<<"test 0"<<endl;
+        edm::Handle<LumiSummary> lumisummary;
+        cout<<"test 1"<<endl;
+        lumiBlock.getByLabel("lumiProducer", lumisummary);
+        float instlumi = lumisummary->avgInsDelLumi();
+        std::cout << "raw data tag " << lumisummary->lumiVersion() << std::endl;
+        ;
+        cout<<"test 2"<<endl;
+        float correctedinstlumi = instlumi;
+        float recinstlumi = lumisummary->avgInsRecLumi();
+        cout<<"test 3"<<endl;
+        float corrfac = 1.;
+        edm::ESHandle<LumiCorrectionParam> datahandle;
+        es.getData(datahandle);
+        cout<<"test 4"<<endl;
+        if(datahandle.isValid())
+        {
+            const LumiCorrectionParam* mydata = datahandle.product();
+            std::cout << "correctionparams " << *mydata << std::endl;
+            corrfac = mydata->getCorrection(instlumi);
+        } else
+        {
+            std::cout << "no valid record found" << std::endl;
+        }
+        correctedinstlumi = instlumi*corrfac;
+        std::cout << "correctedinstlumi " << correctedinstlumi << std::endl;
+        float correctedinstRecLumi = recinstlumi*corrfac;
+        std::cout << "corrected rec instlumi " << correctedinstRecLumi << std::endl;
+    } catch(const edm::eventsetup::NoRecordException<LumiCorrectionParamRcd>& er)
+    {
+        std::cout << "no data found" << std::endl;
+    } catch(const cms::Exception& ee)
+    {
+        std::cout << ee.what() << std::endl;
+    }
 }
-
+*/
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 
@@ -374,10 +371,8 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
     edm::ESHandle<CaloTPGTranscoder> outTranscoder;
     eventSetup.get<CaloTPGRecord>().get(outTranscoder);
     outTranscoder->setup(eventSetup, CaloTPGTranscoder::HcalTPG);
-    double MinSeed=0;
-    bool featurebitPos[10][72];
-    bool featurebitNeg[10][72];
-    //double MinEt =0;
+
+
     struct PrimDigiUse CutInfo;
     for(int ietac = 0; ietac < 10; ietac++)
     {
@@ -390,43 +385,37 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
             CutInfo.LocMaxNeg[ietac][iphi] = false;
         }
     }
-
     edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
     iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
     for(HcalTrigPrimDigiCollection::const_iterator tp = hfpr_digi->begin(); tp != hfpr_digi->end(); ++tp)
     {
+        
         if(abs(tp->id().ieta()) < 30 || abs(tp->id().ieta()) > 39)continue;
 
         double MaxEt = 0;
-        
+
+
         for(int i = 0; i < tp->size(); i++)
         {
-            //if((MaxEt < outTranscoder->hcaletValue(tp->id(), (*tp)[i])&&MinEt < outTranscoder->hcaletValue(tp->id(), (*tp)[i]))&&((*tp)[i].fineGrain() || !UseFine))
-            //{
+            if(MaxEt < outTranscoder->hcaletValue(tp->id(), (*tp)[i])&&((*tp)[i].fineGrain() || !UseFine))
+            {
                 //cout<<"okay hopfully this works we have a compression bit of :"<<(*tp)[i].compressedEt()<<endl;
                 //cout<<"and our real Et is "<<outTranscoder->hcaletValue(tp->id(), (*tp)[i])<<endl;
-              //  MaxEt = outTranscoder->hcaletValue(tp->id(), (*tp)[i]);
+                MaxEt = outTranscoder->hcaletValue(tp->id(), (*tp)[i]);
                 // cout << "okay this should be non zero ptest"<<MaxEt << endl;
 
 
 
-            //}
+            }
         }
-        
-        
-        MaxEt=outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
-        cout<<"Compressed Et :"<<tp->SOI_compressedEt();
-        cout<<"    Uncompressed Et ;"<<outTranscoder->hcaletValue(tp->id(),  tp->SOI_compressedEt())<<endl;
-        //if((!tp->SOI_fineGrain())&&UseFine)MaxEt=0;
-        if(tp->id().ieta() > 0)
+        if(tp->id().ieta() > 0)//delete
         {
 
-            featurebitPos[(tp->id().ieta() - 30)][(tp->id().iphi())]=(tp->SOI_fineGrain() || !UseFine);
             CutInfo.MaxEtPos[(tp->id().ieta() - 30)][(tp->id().iphi())] = MaxEt;
         } else
         {
-            featurebitNeg[(abs(tp->id().ieta()) - 30)][(tp->id().iphi())]=(tp->SOI_fineGrain() || !UseFine);
             CutInfo.MaxEtNeg[(abs(tp->id().ieta()) - 30)][(tp->id().iphi())] = MaxEt;
+
         }
     }
 
@@ -443,7 +432,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
             bool botcent = CutInfo.MaxEtPos[ietac][iphi] > CutInfo.MaxEtPos[ietac - 1][iphi] || ietac == 0;
             bool botright = CutInfo.MaxEtPos[ietac][iphi] > CutInfo.MaxEtPos[ietac - 1][iphi + 2] || ietac == 0;
 
-            CutInfo.LocMaxPos[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][iphi] > MinSeed&&featurebitPos[ietac][71]);
+            CutInfo.LocMaxPos[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][iphi] > 5);
             //if(ietac==0&&CutInfo.LocMaxPos[ietac][iphi])cout<<" huh this is odd."<<endl;
 
         }
@@ -455,7 +444,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
         bool botleft = CutInfo.MaxEtPos[ietac][1] > CutInfo.MaxEtPos[ietac - 1][71] || ietac == 0;
         bool botcent = CutInfo.MaxEtPos[ietac][1] > CutInfo.MaxEtPos[ietac - 1][1] || ietac == 0;
         bool botright = CutInfo.MaxEtPos[ietac][1] > CutInfo.MaxEtPos[ietac - 1][3] || ietac == 0;
-        CutInfo.LocMaxPos[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][1] > MinSeed&&featurebitPos[ietac][1]);
+        CutInfo.LocMaxPos[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][1] > 5);
 
         upleft = CutInfo.MaxEtPos[ietac][71] > CutInfo.MaxEtPos[ietac + 1][69] || ietac == 9;
         upcent = CutInfo.MaxEtPos[ietac][71] > CutInfo.MaxEtPos[ietac + 1][71] || ietac == 9;
@@ -465,7 +454,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
         botleft = CutInfo.MaxEtPos[ietac][71] > CutInfo.MaxEtPos[ietac - 1][69] || ietac == 0;
         botcent = CutInfo.MaxEtPos[ietac][71] > CutInfo.MaxEtPos[ietac - 1][71] || ietac == 0;
         botright = CutInfo.MaxEtPos[ietac][71] > CutInfo.MaxEtPos[ietac - 1][1] || ietac == 0;
-        CutInfo.LocMaxPos[ietac][71] = (upleft && upcent && upright && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][71] > MinSeed&&featurebitPos[ietac][71]);
+        CutInfo.LocMaxPos[ietac][71] = (upleft && upcent && upright && left && botleft && botcent && botright && CutInfo.MaxEtPos[ietac][71] > 5);
 
     }
 
@@ -484,7 +473,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
 
 
 
-            CutInfo.LocMaxNeg[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][iphi] > MinSeed&&featurebitNeg[ietac][iphi]);
+            CutInfo.LocMaxNeg[ietac][iphi] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][iphi] > 5);
 
         }
         bool upleft = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac + 1][71] || ietac == 9;
@@ -495,7 +484,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
         bool botleft = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][71] || ietac == 0;
         bool botcent = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][1] || ietac == 0;
         bool botright = CutInfo.MaxEtNeg[ietac][1] > CutInfo.MaxEtNeg[ietac - 1][3] || ietac == 0;
-        CutInfo.LocMaxNeg[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][1] > MinSeed&&featurebitNeg[ietac][1]);
+        CutInfo.LocMaxNeg[ietac][1] = (upleft && upcent && upright && right && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][1] > 5);
 
         upleft = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac + 1][69] || ietac == 9;
         upcent = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac + 1][71] || ietac == 9;
@@ -505,7 +494,7 @@ DataAnalizer::PrimDigiUse DataAnalizer::PrimInfo(const edm::Event& iEvent, const
         botleft = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac - 1][69] || ietac == 0;
         botcent = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac - 1][71] || ietac == 0;
         botright = CutInfo.MaxEtNeg[ietac][71] > CutInfo.MaxEtNeg[ietac - 1][1] || ietac == 0;
-        CutInfo.LocMaxNeg[ietac][71] = (upleft && upcent && upright && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][71] > MinSeed&&featurebitNeg[ietac][71]);
+        CutInfo.LocMaxNeg[ietac][71] = (upleft && upcent && upright && left && botleft && botcent && botright && CutInfo.MaxEtNeg[ietac][71] > 5);
 
     }
 

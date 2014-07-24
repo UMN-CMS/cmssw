@@ -6,7 +6,7 @@ Min_Long_Energy= cms.double(41),#makes a cut based on energy deposited in short 
     Min_Short_Energy= cms.double(10),
     Long_vrs_Short_Slope= cms.double(.375),
     Long_Short_Offset= cms.double(-267),
-    RawData = cms.bool(False)) 
+    RawData = cms.bool(True)) 
 
 
 simHcalTriggerPrimitiveDigis = cms.EDProducer("HcalTrigPrimDigiProducer",

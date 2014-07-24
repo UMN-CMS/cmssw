@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("HFCALIB")   
+process = cms.Process("newDIGI")   
 
 
 #--- Steps available to this configuration       ---#
@@ -28,6 +28,7 @@ process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
 process.load('Configuration.StandardSequences.L1Reco_cff')
 process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
+process.load('Configuration.StandardSequences.EndOfProcess_cff')
 
 #############added
 
@@ -54,7 +55,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
 
 if(isData):
-      TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root','file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/085550A9-3EDC-E111-AA7F-5404A63886BE.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/08E28448-79DC-E111-9F48-5404A63886C5.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root']
+      TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root']
       
 else:
     TempFN=['file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/48CC1D33-6E6A-E311-8855-001D09F251EF.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/5668ACA2-6B6A-E311-A71E-02163E00E76C.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/5E0D6BBD-6C6A-E311-9202-0025904B2FD8.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/608D9D23-6B6A-E311-AEC2-E0CB4E55365D.root']
@@ -147,6 +148,9 @@ process.boolTrue = cms.EDFilter( 'HLTBool',
     result = cms.bool( True )
 )
 process.calibPreSequence = cms.Sequence(process.boolTrue)
+process.endjob_step = cms.EndPath(process.endOfProcess)
+process.out_step = cms.EndPath(process.out)
+
 ######################
 # Additional output definition
 
@@ -168,14 +172,12 @@ process.calibPreSequence = cms.Sequence(process.boolTrue)
 
 if( isData):
     process.p = cms.Path(
-    process.reconstructionFromRawSequence+ process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis
+    process.calibPreSequence + process.reconstructionFromRawSequence + process.simHcalTriggerPrimitiveDigis +
+    process.DataAna
     )
 else:
     process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs)
 
-
-process.out_step = cms.EndPath(process.out)
-
-process.schedule = cms.Schedule(process.p,process.out_step)
+process.schedule = cms.Schedule(process.p,process.endjob_step,process.out_step)
 
 
