@@ -164,10 +164,12 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          if(tp->id().ieta() < 0)
 	 {
              EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+             HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi());
 	 }
 	 else
 	 {
 	     EtArrayPos [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+	     HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi());
          }
 	 cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
 	 cout << EtArrayPos [1][1]*EtArrayNeg [1][1]*0;          //this cout statement does not display
