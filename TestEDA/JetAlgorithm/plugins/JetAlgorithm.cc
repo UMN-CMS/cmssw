@@ -50,8 +50,8 @@
 #include "RecoLuminosity/LumiProducer/interface/LumiCorrectionParam.h"
 #include "RecoLuminosity/LumiProducer/interface/LumiCorrectionParamRcd.h"
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
-
-
+//ROOT stuff
+#include "TH2D.h"
 
 
 //lumi stuff^
@@ -89,6 +89,9 @@ private:
     //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
     // ----------member data ---------------------------
+    TH2D* HFEtPos;
+    TH2D* HFEtNeg;
+    
 };
 
 //
@@ -106,9 +109,10 @@ private:
 JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
 {
     edm::Service<TFileService> fs;
-    //now do what ever initialization is needed
+//Generic Constructor: (const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) I'm choosing x to be ieta and y to iphi 
+    HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+    HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
 }
-
 JetAlgorithm::~JetAlgorithm() {
 
     // do anything here that needs to be done at desctruction time
