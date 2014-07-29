@@ -91,6 +91,7 @@ private:
     // ----------member data ---------------------------
     TH2D* HFEtPos;
     TH2D* HFEtNeg;
+    TH1D* HFEt;
     
 };
 
@@ -112,6 +113,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
 //Generic Constructor: (const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) I'm choosing x to be ieta and y to iphi 
     HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+    HFEt = fs->make<TH1D>("HFEt", "Et in HF", 100, 0.0, 100);
 }
 JetAlgorithm::~JetAlgorithm() {
 
@@ -161,7 +163,10 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
              continue;    //Grabs the useful part of HF
          }
          //We need the sample of interest (SOI)
-         if(tp->id().ieta() < 0)
+	 
+         HFEt->Fill(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+
+	 if(tp->id().ieta() < 0)
 	 {
              EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
              HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi());
@@ -172,7 +177,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi());
          }
 	 cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
-	 cout << EtArrayPos [1][1]*EtArrayNeg [1][1]*0;          //this cout statement does not display
+	 cout << EtArrayPos [tp->id().ieta()][tp->id().iphi()] <<endl;
+	 cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl;          
      }
 //     cout << "\nJust after loop \n";
 }
