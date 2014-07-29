@@ -38,9 +38,10 @@ process.source = cms.Source("PoolSource",
         'file:DIGIoutput.root'
     )
 )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("jets.root"))
 
 process.jetFinder = cms.EDAnalyzer('JetAlgorithm'
 )
 
 
-process.p = cms.Path(process.calibPreSequence + process.jetFinder)
+process.p = cms.Path(process.jetFinder)
