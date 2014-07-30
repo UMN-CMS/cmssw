@@ -60,6 +60,8 @@
 #include "CalibFormats/HcalObjects/interface/HcalTPGCoder.h"
 #include "CalibFormats/CaloTPG/interface/CaloTPGRecord.h"
 #include <iostream>
+#include <vector>
+
 using namespace std;
 
 
@@ -92,7 +94,8 @@ private:
     TH2D* HFEtPos;
     TH2D* HFEtNeg;
     TH1D* HFEt;
-    
+    vector<TH2D> PosHFHits;
+    vector<TH2D> NegHFHits;
 };
 
 //
@@ -114,6 +117,8 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     HFEt = fs->make<TH1D>("HFEt", "Et in HF", 100, 0.0, 100);
+//    PosHFHits = fs->make<vector<TH2D>>();
+//    NegHFHits = fs->make<vector<TH2D>>();   This is how it is done...
 }
 JetAlgorithm::~JetAlgorithm() {
 
@@ -131,56 +136,61 @@ JetAlgorithm::~JetAlgorithm() {
 void
 JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-//     cout << "beginning";
-     using namespace edm;
+    //     cout << "beginning";
+    using namespace edm;
 
-//     cout << "test \n";              //this cout statement does display
+    //     cout << "test \n";              //this cout statement does display
 
-     double EtArrayPos [40][72];
-     double EtArrayNeg [40][72];
+    double EtArrayPos [40][72];
+    double EtArrayNeg [40][72];
 
-     edm::ESHandle<CaloTPGTranscoder> outTranscoder;
-     iSetup.get<CaloTPGRecord>().get(outTranscoder);
-     outTranscoder->setup(iSetup, CaloTPGTranscoder::HcalTPG);
-//     cout << "finished outTranscoder";
-     // This initialization and loop is really all I care about.  I just need to save the MaxEt in an array. by eta and phi.
-     // Also, I need to convert from compressed Et to real Et: I think this is done by the outTranscoder.  This sequence may need modification pending talking to Zach
-     edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
-     iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
-//     cout << "Just before loop \n";
-     if(hfpr_digi->begin()==hfpr_digi->end())
-     {
-         cout << "empty";
-     }
+    edm::ESHandle<CaloTPGTranscoder> outTranscoder;
+    iSetup.get<CaloTPGRecord>().get(outTranscoder);
+    outTranscoder->setup(iSetup, CaloTPGTranscoder::HcalTPG);
+    //     cout << "finished outTranscoder";
+    // This initialization and loop is really all I care about.  I just need to save the MaxEt in an array. by eta and phi.
+    // Also, I need to convert from compressed Et to real Et: I think this is done by the outTranscoder.  This sequence may need modification pending talking to Zach
+    edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
+    iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
+    //     cout << "Just before loop \n";
+    if(hfpr_digi->begin()==hfpr_digi->end())
+    {
+        cout << "empty";
+    }
 
-     
-     for(HcalTrigPrimDigiCollection::const_iterator tp = hfpr_digi->begin(); tp != hfpr_digi->end(); ++tp)
-     {
-//         cout << "HI";                    //this cout statement does not display
-         if(abs(tp->id().ieta()) < 30 || abs(tp->id().ieta()) > 39)
-         {
-//             cout << "useful part of HF \n";
-             continue;    //Grabs the useful part of HF
-         }
-         //We need the sample of interest (SOI)
-	 
-         HFEt->Fill(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+    // Make Histograms
+    edm::Service<TFileService> fs;
+    // TODO-ANDREW: You will probably want to rename these so they don't all have the same name!
 
-	 if(tp->id().ieta() < 0)
-	 {
-             EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
-             HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi());
-	 }
-	 else
-	 {
-	     EtArrayPos [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
-	     HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi());
-         }
-	 cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
-	 cout << EtArrayPos [tp->id().ieta()][tp->id().iphi()] <<endl;
-	 cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl;          
-     }
-//     cout << "\nJust after loop \n";
+    for(HcalTrigPrimDigiCollection::const_iterator tp = hfpr_digi->begin(); tp != hfpr_digi->end(); ++tp)
+    {
+        //         cout << "HI";                    //this cout statement does not display
+        if(abs(tp->id().ieta()) < 30 || abs(tp->id().ieta()) > 39)
+        {
+            //             cout << "useful part of HF \n";
+            continue;    //Grabs the useful part of HF
+        }
+        //We need the sample of interest (SOI)
+
+        HFEt->Fill(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+
+        if(tp->id().ieta() < 0)
+        {
+            EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+            HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi(), outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+        }
+        else
+        {
+            EtArrayPos [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+            HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi(), outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+        }
+        cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
+        cout << EtArrayPos [tp->id().ieta()][tp->id().iphi()] <<endl;
+        cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl;          
+    }
+    //     cout << "\nJust after loop \n";
+    HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+    HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
 }
 void
 JetAlgorithm::beginJob() { }
