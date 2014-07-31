@@ -143,6 +143,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     double EtArrayPos [40][72];
     double EtArrayNeg [40][72];
+    bool nonZero = false;
 
     edm::ESHandle<CaloTPGTranscoder> outTranscoder;
     iSetup.get<CaloTPGRecord>().get(outTranscoder);
@@ -177,20 +178,37 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         if(tp->id().ieta() < 0)
         {
             EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+            EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()+1] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
             HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi(), outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+            HFEtNeg->SetBinContent(abs(tp->id().ieta()),tp->id().iphi()+1, outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
         }
         else
         {
             EtArrayPos [tp->id().ieta()][tp->id().iphi()] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
+            EtArrayPos [tp->id().ieta()][tp->id().iphi()+1] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
             HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi(), outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+            HFEtPos->SetBinContent(tp->id().ieta(),tp->id().iphi()+1, outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
         }
-        cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
+    /*    cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
         cout << EtArrayPos [tp->id().ieta()][tp->id().iphi()] <<endl;
-        cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl;          
+        cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl; */
+
+        if(EtArrayPos [tp->id().ieta()][tp->id().iphi()] + EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] > 1000000)
+        {
+            cout << "woah that's a big number";
+        }
+
+        if(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) > .01)
+        {
+            nonZero = true;
+        }
     }
     //     cout << "\nJust after loop \n";
-    HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
-    HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+    if(nonZero)
+    {
+        HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+        HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
+    }
 }
 void
 JetAlgorithm::beginJob() { }
