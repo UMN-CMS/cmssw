@@ -143,6 +143,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     double EtArrayPos [40][72];
     double EtArrayNeg [40][72];
+    double Posjets [40][72];
+    double Negjets [40][72];
     bool nonZero = false;
 
     edm::ESHandle<CaloTPGTranscoder> outTranscoder;
@@ -193,9 +195,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         cout << EtArrayPos [tp->id().ieta()][tp->id().iphi()] <<endl;
         cout << EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] << endl << endl; */
 
-        if(EtArrayPos [tp->id().ieta()][tp->id().iphi()] + EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] > 1000000)
+        if(EtArrayPos [tp->id().ieta()][tp->id().iphi()] + EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()] < 0)
         {
-            cout << "woah that's a big number";
+            cout << "uh oh! negative number! :(" << endl;
         }
 
         if(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) > .01)
@@ -209,6 +211,52 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
         HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     }
+
+    //Now that the DIGIs are read in and graphed, this part of the code actually tries to find jets.  It makes a 3x6 ietaxiphi sliding window of jets
+    if(true)
+    {    
+        
+        for(int i = 31; i < 40; i++) //loops over ieta
+        {
+            for(int j = 1; j < 71; j++)
+            {
+                Negjets [i][j] = EtArrayNeg [i-1][j-1] + EtArrayNeg [i-1][j] + EtArrayNeg [i-1][j+1] + 
+                                 EtArrayNeg [i][j-1]   + EtArrayNeg [i][j]   + EtArrayNeg [i][j+1]   +
+                                 EtArrayNeg [i+1][j-1] + EtArrayNeg [i+1][j] + EtArrayNeg [i+1][j+1];
+            }
+         }
+    }
+    if(true)
+    {
+        
+        for(int k = 31; k < 40; k++) //loops over ieta
+        {
+            for(int l = 1; l < 71; l++)
+            {
+                Posjets [k][l] = EtArrayPos [k-1][l-1] + EtArrayPos [k-1][l] + EtArrayPos [k-1][l+1] +
+                                 EtArrayPos [k][l-1]   + EtArrayPos [k][l]   + EtArrayPos [k][l+1]   +
+                                 EtArrayPos [k+1][l-1] + EtArrayPos [k+1][l] + EtArrayPos [k+1][l+1];
+                                                                                  
+            }
+        }
+
+    }
+    if(Posjets [1][1] + Negjets [1][1] < 0)
+    {
+       cout << "Happy Birthday!" << endl;
+    }
+                                
+    
+    
+
+
+
+
+
+
+
+
+
 }
 void
 JetAlgorithm::beginJob() { }
