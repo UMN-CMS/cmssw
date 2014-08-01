@@ -96,6 +96,8 @@ private:
     TH1D* HFEt;
     TH1D* HFPosJets;
     TH1D* HFNegJets;
+    TH1D* HFNegRatio;
+    TH1D* HFPosRatio;
 };
 
 //
@@ -113,14 +115,14 @@ private:
 JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
 {
     edm::Service<TFileService> fs;
-//Generic Constructor: (const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) I'm choosing x to be ieta and y to iphi 
+//Generic Constructor For TH2D: (const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) I'm choosing x to be ieta and y to iphi 
     HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 40, 0.0, 40, 72, 0.0, 72);
     HFEt = fs->make<TH1D>("HFEt", "Et in HF", 100, 0.0, 100);
     HFPosJets =fs->make<TH1D>("HFPosJets", "Positive HF 3x3 Jet Et", 100, 0.0, 100);
     HFNegJets = fs->make<TH1D>("HFNegJets", "Negative HF 3x3 Jet Et", 100, 0.0, 100);
-//    PosHFHits = fs->make<vector<TH2D>>();
-//    NegHFHits = fs->make<vector<TH2D>>();   This is how it is done...
+    HFNegRatio = fs->make<TH1D>("HFNegRatio", "Neg HF 3x3 vs Seed Ratio", 50, 0.0, 2);
+    HFPosRatio = fs->make<TH1D>("HFPosRatio", "Pos HF 3x3 vs Seed Ratio", 50, 0.0, 2);
 }
 JetAlgorithm::~JetAlgorithm() {
 
@@ -222,19 +224,28 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         {
             for(int j = 3; j < 70; j+=2) //loops over iphi
             {
+                if(EtArrayNeg [i][j] > 10)  //10GeV seed cell threshhold
+                {
                 NegJets [i][j] = EtArrayNeg [i-1][j-2] + EtArrayNeg [i-1][j] + EtArrayNeg [i-1][j+2] + 
                                  EtArrayNeg [i][j-2]   + EtArrayNeg [i][j]   + EtArrayNeg [i][j+2]   +
                                  EtArrayNeg [i+1][j-2] + EtArrayNeg [i+1][j] + EtArrayNeg [i+1][j+2];
                 
                 HFNegJets->Fill(NegJets [i][j]);
 
+                HFNegRatio->Fill(EtArrayNeg [i][j]/NegJets [i][j]);
+                }
+                if(EtArrayPos [i][j] > 10)   //10GeV seed cell threshhold
+                {
                 PosJets [i][j] = EtArrayPos [i-1][j-2] + EtArrayPos [i-1][j] + EtArrayPos [i-1][j+2] +
                                  EtArrayPos [i][j-2]   + EtArrayPos [i][j]   + EtArrayPos [i][j+2]   +
                                  EtArrayPos [i+1][j-2] + EtArrayPos [i+1][j] + EtArrayPos [i+1][j+2];
 
                 HFPosJets->Fill(PosJets [i][j]);
+
+                HFPosRatio->Fill(EtArrayPos [i][j]/PosJets [i][j]);
+                }
             }
-         }
+        }
     }
 
     
