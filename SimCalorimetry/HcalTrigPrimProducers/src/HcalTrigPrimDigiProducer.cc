@@ -91,14 +91,18 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
   edm::Handle<HBHEDigiCollection> hbheDigis;
   edm::Handle<HFDigiCollection>   hfDigis;
-  if(!RAWDataCon_)
+  if(RAWDataCon_)
     {
         iEvent.getByToken(tok_hbhe_, hbheDigis);
         iEvent.getByToken(tok_hf_, hfDigis);
+        cout << hfDigis->size() << endl;
     } else
     {
-        iEvent.getByLabel("hcalDigis", hbheDigis);
-        iEvent.getByLabel("hcalDigis", hfDigis);
+        iEvent.getByLabel("simHcalUnsuppressedDigis", hbheDigis);
+        iEvent.getByLabel("simHcalUnsuppressedDigis", hfDigis);
+        cout << "we get here";
+        cout << hfDigis->size() << endl;
+
     }
   // protect here against missing input collections
   // there is no protection in HcalTriggerPrimitiveAlgo

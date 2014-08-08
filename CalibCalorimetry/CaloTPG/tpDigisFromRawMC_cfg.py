@@ -28,6 +28,8 @@ process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
 process.load('Configuration.StandardSequences.L1Reco_cff')
 process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
+process.load('Configuration.StandardSequences.EndOfProcess_cff')
+
 
 #############added
 
@@ -58,7 +60,9 @@ if(isData):
       TempFN=['file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_041.root']
       
 else:
-    TempFN=['file:/data/whybee1a/user/aevans/digis/VBFMCDIGIs06-6C.root']
+    TempFN=['file:/data/whybee1a/user/aevans/digis/VBFMCDIGIs06-6C.root'#,
+            #'file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/48CC1D33-6E6A-E311-8855-001D09F251EF.root'
+           ]
 
 
 
@@ -71,7 +75,7 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("MCDIGIoutput.root"),
+    fileName = cms.untracked.string("kicks.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
     outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*' )
 )
@@ -93,8 +97,8 @@ process.rctDigis.hcalDigis = cms.VInputTag(cms.InputTag("simHcalTriggerPrimitive
 
 
 #--- Create TP digis from unpacked digis
-from SimCalorimetry.HcalTrigPrimProducers.hcaltpdigi_cfi import LSParameter
-process.load('SimCalorimetry.HcalTrigPrimProducers.hcaltpdigi_cff')
+from SimCalorimetry.HcalTrigPrimProducers.hcaltpdigiMC_cfi import LSParameter
+process.load('SimCalorimetry.HcalTrigPrimProducers.hcaltpdigiMC_cff')
 
 process.simHcalTriggerPrimitiveDigis.inputLabel = cms.VInputTag( cms.InputTag('simHcalUnsuppressedDigis'), cms.InputTag('simHcalUnsuppressedDigis') )
 process.simHcalTriggerPrimitiveDigis.FrontEndFormatError = cms.bool(False)
@@ -145,7 +149,6 @@ process.DataAna =cms.EDAnalyzer("DataAnalizer")
 process.CutAs = cms.EDAnalyzer("CutAssessment")
 process.FullGraph = cms.EDAnalyzer('LSEn')
 #--- Histograms ---#
-from SimCalorimetry.HcalTrigPrimProducers.hcaltpdigi_cfi import LSParameter
 #new_filename = "Long"+LSParameter.Min_Long_Energy.pythonValue() + "_Short" + LSParameter.Min_Short_Energy.pythonValue() + "_Slope_OffSet" + LSParameter.Long_vrs_Short_Slope.pythonValue() + "_Long_Short_Offset"+LSParameter.Long_Short_Offset.pythonValue() +".root"
 new_filename = "Long%s_Short%s_Slope%s_LongShortOffset%s.root" % (LSParameter.Min_Long_Energy.pythonValue(),
                                                                   LSParameter.Min_Short_Energy.pythonValue(),
@@ -175,12 +178,12 @@ process.calibPreSequence = cms.Sequence(process.boolTrue)
 #process.digitisation_step = cms.Path(process.pdigi)
 #process.L1simulation_step = cms.Path(process.SimL1Emulator)
 #process.digi2raw_step = cms.Path(process.DigiToRaw)
-process.endjob_step = cms.EndPath(process.out)
+process.out_step = cms.EndPath(process.out)
 #process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
 #process.raw2digi_step = cms.Path(process.RawToDigi)
 # Schedule definition
 #process.schedule = cms.Schedule(process.digitisation_step,process.L1simulation_step,process.digi2raw_step,process.endjob_step)
-
+process.endjob_step = cms.EndPath(process.endOfProcess)
 
 ###########################
 # process.p = cms.Path( process.calibPreSequence + process.hcalCond + process.simHcalTriggerPrimitiveDigis + process.dump + process.histos )
@@ -191,8 +194,8 @@ if( isData):
 #process.reconstructionFromRawSequence+
     #process.p = cms.Path(process.reconstructionFromRawSequence+ process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.DataAna+process.FullGraph)
 else:
-    process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis
+    process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.DataAna
                        # + process.test + process.CutAs
                         )
-    process.schedule = cms.Schedule(process.p,process.endjob_step)
+    process.schedule = cms.Schedule(process.p,process.endjob_step,process.out_step)
 
