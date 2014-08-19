@@ -93,9 +93,9 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
   edm::Handle<HFDigiCollection>   hfDigis;
   if(RAWDataCon_)
     {
-        iEvent.getByToken(tok_hbhe_, hbheDigis);
-        iEvent.getByToken(tok_hf_, hfDigis);
-        cout << hfDigis->size() << endl;
+        iEvent.getByLabel("hcalDigis", hbheDigis);
+        iEvent.getByLabel("hcalDigis", hfDigis);
+
     } else
     {
         iEvent.getByLabel("simHcalUnsuppressedDigis", hbheDigis);

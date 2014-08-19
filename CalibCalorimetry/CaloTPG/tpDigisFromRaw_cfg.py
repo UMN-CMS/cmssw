@@ -72,7 +72,7 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("DIGIoutput.root"),
+    fileName = cms.untracked.string("DIGIoutputTest.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
     outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*' )
 )

@@ -75,9 +75,10 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("kicks.root"),
+    fileName = cms.untracked.string("MCtpDigis.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-    outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*' )
+    outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*',
+                                            'keep *_ak5GenJets_*_*')
 )
 
 ###--- (3) Re-RECO from RAW ---###

@@ -1,6 +1,6 @@
-mport FWCore.ParameterSet.Config as cms 
+import FWCore.ParameterSet.Config as cms 
   
-process = cms.Process("HFCALIB")
+process = cms.Process("DataDIGIs")
 
 
 #--- Steps available to this configuration       ---#
@@ -55,7 +55,16 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 if(isData):
       #TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/085550A9-3EDC-E111-AA7F-5404A63886BE.root','file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/08E28448-79DC-E111-9F48-5404A63886C5.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root']
-      TempFN=['file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_126.root','file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_125.root','file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_127.root','file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_129.root','file:/hdfs/cms/user/lesko/MinBiasWithDigiAndReco/MinBias2012CDigiAndReco_132.root']
+      TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/02E206EC-31EB-E111-B28B-0025901D625A.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/107F5B7E-3BEB-E111-B62A-5404A638869C.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/12289FB1-4BEB-E111-9F34-5404A63886C6.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/18A54268-41EB-E111-8865-BCAEC532971C.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/18B45649-3DEB-E111-85F6-003048D3756A.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/1AF81C9F-58EB-E111-80CC-5404A640A642.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/203F6666-F1EA-E111-B979-003048F024C2.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/24A913E6-2DEB-E111-A2FA-BCAEC518FF68.root',
+              'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/260131D3-1EEB-E111-9B10-001D09F2924F.root']
+              
       
 else:
     TempFN=['file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/48CC1D33-6E6A-E311-8855-001D09F251EF.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/5668ACA2-6B6A-E311-A71E-02163E00E76C.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/5E0D6BBD-6C6A-E311-9202-0025904B2FD8.root','file:/hdfs/cms/phedex/store/relval/CMSSW_7_0_0_pre11/RelValZEE_13/GEN-SIM-DIGI-RAW-HLTDEBUG/PU50ns_POSTLS162_V5_OldTrk-v1/00000/608D9D23-6B6A-E311-AEC2-E0CB4E55365D.root']
@@ -69,11 +78,11 @@ fileNames = cms.untracked.vstring(TempFN )
     
 )
 
-#process.out = cms.OutputModule( "PoolOutputModule",
-#    fileName = cms.untracked.string("lumprod.root"),
-#    SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-#    outputCommands = cms.untracked.vstring( 'keep *' )
-#)
+process.out = cms.OutputModule( "PoolOutputModule",
+    fileName = cms.untracked.string("/data/whybee1a/user/aevans/digis/DataDIGIoutput.root"),
+    SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
+    outputCommands = cms.untracked.vstring( 'keep *' )
+)
 
 ###--- (3) Re-RECO from RAW ---###
 ### Auto generated configuration file using Revision: 1.381.2.6 
@@ -174,7 +183,7 @@ process.calibPreSequence = cms.Sequence(process.boolTrue)
 #process.digitisation_step = cms.Path(process.pdigi)
 #process.L1simulation_step = cms.Path(process.SimL1Emulator)
 #process.digi2raw_step = cms.Path(process.DigiToRaw)
-#process.endjob_step = cms.EndPath(process.out)
+process.endjob_step = cms.EndPath(process.out)
 #process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
 #process.raw2digi_step = cms.Path(process.RawToDigi)
 # Schedule definition
@@ -191,5 +200,5 @@ if( isData):
     #process.p = cms.Path(process.reconstructionFromRawSequence+ process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis + process.DataAna+process.FullGraph)
 else:
     process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs)
-#process.schedule = cms.Schedule(process.p,process.endjob_step)
+process.schedule = cms.Schedule(process.p,process.endjob_step)
 
