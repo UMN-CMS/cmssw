@@ -92,10 +92,14 @@ private:
     TH1 *EtPassedElectron, *EtPassedNonElectron, *EtRatioPassedElectron, *EtRatioPassedNonElectron;
     TH1 *EtAllPassedElectron, *EtAllRatioPassedElectron;
     TH1 *Seedoverbackround;
+    TH1 *SecondOverMaxFine;
+    TH2 *StandardDeviationVSEnergy;
     TH2 *Etvrs3X3Fine, *Etvrs3X3NoFine;
+    TH2 *EnergyVSEnergyOver3X3
     TH2 *SeedPrimVrs3X3Fine, *SeedPrimVrs3X3NoFine;
     TH2 *ElectonEtCompEt;
     TH2 *comp3X3VS5X5Fine, *comp3X3VS5X5NoFine;
+    TH2 *CentVs3X3Fine, *CentVs3X3NoFine;
     double GenEtPos[20][72];
     double GenEtNeg[20][72];
     double CompEtPos[20][72];
@@ -147,21 +151,22 @@ CutAssessment::CutAssessment(const edm::ParameterSet& iConfig)
     edm::Service<TFileService> fs;
     TFileDirectory fine = fs->mkdir("finebit");
     TFileDirectory nofine = fs->mkdir("no_fine");
-    EtPassedElectron = fine.make<TH1F>("Et_of_Electron", "Et_of_Electron", 120, 0, 120);
-    EtPassedNonElectron = fine.make<TH1F>("Et_of_NonElectron", "Et_of_NonElectron", 120, 0, 120);
-    EtAllPassedElectron = nofine.make<TH1F>("Et_of_Electron", "Et_of_Electron", 120, 0, 120);
+    EtPassedElectron = fine.make<TH1F>("Et_of_Electron", "Et_of_Electron", 400, 0, 200);
+    EtAllPassedElectron = nofine.make<TH1F>("Et_of_Electron", "Et_of_Electron", 400, 0, 200);
+    SecondOverMaxFine = fine.make<TH1F>("Et_of_Second_over_Max", "Et_of_Second_over_Max;Ratio", 200, 0, 1.001);
 
-    EtRatioPassedElectron = fine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 100, 0, 1.01);
-    EtRatioPassedNonElectron = fine.make<TH1F>("Et_Ratio_of_NonElectron", "Et_Ratio_of_NonElectron", 100, 0, 1.01);
-    EtAllRatioPassedElectron = nofine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 100, 0, 1.01);
-    Etvrs3X3Fine = fine.make<TH2F>("centervrsdenominator", "centervrsdenominator;et;denominator", 120, 0, 120, 120, 0, 120);
-    Etvrs3X3NoFine = nofine.make<TH2F>("centervrsdenominator", "centervrsdenominator;et;denominator", 120, 0, 120, 120, 0, 120);
-    ElectonEtCompEt = fs->make<TH2F>("compressed_VS_Generated", "compressed_VS_Generated; Comp; Gen(Et)", 120, 0, 120, 150, 0, 150);
+    EtRatioPassedElectron = fine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 200, 0, 1.001);
+    EtAllRatioPassedElectron = nofine.make<TH1F>("Et_Ratio_of_Electron", "Et_Ratio_of_Electron", 200, 0, 1.001);
+    Etvrs3X3Fine = fine.make<TH2F>("CentVs3X3", "CentVs3X3;et;denominator", 400, 0, 200, 400, 0, 200);
+    Etvrs3X3NoFine = nofine.make<TH2F>("CentVs3X3", "CentVs3X3;et;denominator", 400, 0, 200, 400, 0, 200);
+    ElectonEtCompEt = fs->make<TH2F>("compressed_VS_Generated", "compressed_VS_Generated; Comp; Gen(Et)", 400, 0, 200, 400, 0, 200);
     //ElectronETunC = fs->make<TH2F>("ETuncomp_VS_Generated", "ETuncomp_VS_Generated; Uncompressed; Gen(Et)", 120, 0, 120, 150, 0, 150);
-    SeedPrimVrs3X3Fine = fine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 100, 0, 100, 100, 0, 100);
-    SeedPrimVrs3X3NoFine = nofine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 100, 0, 100, 100, 0, 100);
-    comp3X3VS5X5Fine = fine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 100, 0, 100, 100, 0, 100);
-    comp3X3VS5X5NoFine = nofine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 100, 0, 100, 100, 0, 100);
+    SeedPrimVrs3X3Fine = fine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 400, 0, 200, 400, 0, 200);
+    SeedPrimVrs3X3NoFine = nofine.make<TH2F>("Seed_Plus_EdgeVs3X3", "Seed_Plus_EdgeVs3X3; Seed Energy; 3X3", 400, 0, 200, 400, 0, 200);
+    comp3X3VS5X5Fine = fine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 400, 0, 200, 400, 0, 200);
+    comp3X3VS5X5NoFine = nofine.make<TH2F>("3X3VS5X5F", "3X3VS5X5F; 3X3; 5X5", 400, 0, 200, 400, 0, 200);
+    EnergyVSEnergyOver3X3 = fine.make<TH2F>("EnergyVSEnergyOver3X3","EnergyVSEnergyOver3X3;Energy;Energy over 3X3", 400, 0, 200, 200, 0, 1.001);
+    StandardDeviationVSEnergy = fine.make<TH2F>("Standard_Deviation_VS_Energy", "Standard_Deviation_VS_Energy; Standard_Deviation; Energy GeV", 90, 0, 1.5, 400, 0, 200);
     Passed = 0;
     Failed = 0;
     Backround = 0;
@@ -290,6 +295,7 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     numEPass++;
                     if(fine)Passed++;
                     else PassedAll++;
+
                     if(PCuts.MaxEtPos[ieta][iphi] < 10)
                         cout << "well thats odd" << endl;
 
@@ -305,6 +311,11 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     //cout << "and the center is " << PCuts.MaxEtPos[ieta][iphi] << endl;
                     double ratio = 0;
                     double bottom = 0;
+
+                    double AvgX = 0;
+                    double AvgY = 0;
+                    double AvgSqu = 0;
+                    double deviation = 0;
 
                     double T5X5 = 0;
                     double seed = 0;
@@ -323,31 +334,43 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                 ietap = 0;
                                 iphip = 0;
                             }
-                            if(PCuts.MaxEtPos[ietap][iphip] > seed && abs(i) < 2 && abs(w) < 2)
+                            if(abs(i) < 2 && abs(w) < 2)
                             {
-                              if(i!=0&&w!=0) seed = PCuts.MaxEtPos[ietap][iphip];
+                                if(PCuts.MaxEtPos[ietap][iphip] > seed && !(i == 0 && w == 0)) seed = PCuts.MaxEtPos[ietap][iphip];
                                 bottom += PCuts.MaxEtPos[ietap][iphip];
+
+                                AvgX += PCuts.MaxEtPos[ietap][iphip] * i;
+                                AvgY += PCuts.MaxEtPos[ietap][iphip] * w;
+                                AvgSqu += PCuts.MaxEtPos[ietap][iphip]*(w * w + i * i);
                             }
                             T5X5 += PCuts.MaxEtPos[ietap][iphip];
                         }
                     }
 
-                    if(seed*2<PCuts.MaxEtPos[ieta][iphi])seed=0;
+
                     ratio = double(PCuts.MaxEtPos[ieta][iphi]) / (bottom);
                     if(fine)
                     {
+                        if(deviation != 0)StandardDeviationVSEnergy->Fill(deviation, PCuts.MaxEtPos[ieta][iphi]);
+                        if(seed == 0 && bottom != PCuts.MaxEtPos[ieta][iphi])cout << "something brokeP" << endl;
+                        SecondOverMaxFine->Fill(seed / PCuts.MaxEtPos[ieta][iphi]);
+                        if(seed * 2 < PCuts.MaxEtPos[ieta][iphi])seed = 0;
                         EtPassedElectron->Fill(PCuts.MaxEtPos[ieta][iphi]);
                         EtRatioPassedElectron->Fill(ratio);
                         comp3X3VS5X5Fine->Fill(bottom, T5X5);
+                        Etvrs3X3Fine->Fill(PCuts.MaxEtPos[ieta][iphi], bottom);
+                        SeedPrimVrs3X3Fine->Fill(seed + PCuts.MaxEtPos[ieta][iphi], bottom);
+
+
                     } else
                     {
+                        if(seed * 2 < PCuts.MaxEtPos[ieta][iphi])seed = 0;
                         EtAllPassedElectron->Fill(PCuts.MaxEtPos[ieta][iphi]);
-
+                        Etvrs3X3NoFine->Fill(PCuts.MaxEtPos[ieta][iphi], bottom);
                         EtAllRatioPassedElectron->Fill(ratio);
-
-
                         ElectonEtCompEt->Fill(PCuts.MaxEtPos[ieta][iphi], GenEtPos[ieta][iphi]);
                         comp3X3VS5X5NoFine->Fill(bottom, T5X5);
+                        SeedPrimVrs3X3NoFine->Fill(seed + PCuts.MaxEtPos[ieta][iphi], bottom);
 
                     }
                     if(ratio > 1 || ratio < 0)
@@ -357,14 +380,14 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     }
 
                 }
-                
-                
-                
-                
-                
-                
-                
-                
+
+
+
+
+
+
+
+
                 ///////////////
                 if(PCuts.LocMaxNeg[ieta][iphi] && gparts.find(make_pair(-ieta - 30, iphi)) != gparts.end())//says if an electron hit in the isolated region.
                 {
@@ -388,7 +411,12 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     double bottom = 0;
                     double T5X5 = 0;
                     double seed = 0;
-                    
+
+                    double AvgX = 0;
+                    double AvgY = 0;
+                    double AvgSqu = 0;
+                    double deviation = 0;
+
                     for(int i = -2; i < 3; i++)
                     {
                         for(int w = -2; w < 3; w++)
@@ -404,15 +432,20 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                 ietap = 0;
                                 iphip = 0;
                             }
-                            if(PCuts.MaxEtNeg[ietap][iphip] > seed && abs(i) < 2 && abs(w) < 2)
+                            if(abs(i) < 2 && abs(w) < 2)
                             {
-                              if(i!=0&&w!=0) seed = PCuts.MaxEtNeg[ietap][iphip];
+                                if(PCuts.MaxEtNeg[ietap][iphip] < 0) cout << "something ghriohguthgiaeo N" << endl;
+                                if(PCuts.MaxEtNeg[ietap][iphip] > seed && !(i == 0 && w == 0)) seed = PCuts.MaxEtNeg[ietap][iphip];
                                 bottom += PCuts.MaxEtNeg[ietap][iphip];
+                                AvgX += PCuts.MaxEtNeg[ietap][iphip] * i;
+                                AvgY += PCuts.MaxEtNeg[ietap][iphip] * w;
+                                AvgSqu += PCuts.MaxEtNeg[ietap][iphip]*(w * w + i * i);
+
                             }
                             T5X5 += PCuts.MaxEtNeg[ietap][iphip];
                         }
                     }
-                    if(seed*2<PCuts.MaxEtNeg[ieta][iphi])seed=0;
+                    deviation = sqrt(AvgSqu * bottom - (AvgX * AvgX + AvgY * AvgY)) / bottom;
                     ratio = double(PCuts.MaxEtNeg[ieta][iphi]) / (bottom);
                     if(fine)EtPassedElectron->Fill(PCuts.MaxEtNeg[ieta][iphi]);
                     else EtAllPassedElectron->Fill(PCuts.MaxEtNeg[ieta][iphi]);
@@ -421,14 +454,23 @@ CutAssessment::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     if(fine)
                     {
+                        if(deviation != 0)StandardDeviationVSEnergy->Fill(deviation, PCuts.MaxEtNeg[ieta][iphi]);
+                        if(seed == 0 && bottom != PCuts.MaxEtNeg[ieta][iphi]) cout << "something brokeN: " << bottom << "\t" << PCuts.MaxEtNeg[ieta][iphi] << endl;
+                                             SecondOverMaxFine->Fill(seed / PCuts.MaxEtNeg[ieta][iphi]);
                         EtRatioPassedElectron->Fill(ratio);
+                        if(seed * 2 < PCuts.MaxEtNeg[ieta][iphi])seed = 0;
                         Etvrs3X3Fine->Fill(PCuts.MaxEtNeg[ieta][iphi], bottom);
                         comp3X3VS5X5Fine->Fill(bottom, T5X5);
+                        SeedPrimVrs3X3Fine->Fill(seed + PCuts.MaxEtNeg[ieta][iphi], bottom);
+
+
                     } else
                     {
+                        if(seed * 2 < PCuts.MaxEtNeg[ieta][iphi])seed = 0;
                         EtAllRatioPassedElectron->Fill(ratio);
                         comp3X3VS5X5NoFine->Fill(bottom, T5X5);
                         Etvrs3X3NoFine->Fill(PCuts.MaxEtNeg[ieta][iphi], bottom);
+                        SeedPrimVrs3X3NoFine->Fill(seed + PCuts.MaxEtNeg[ieta][iphi], bottom);
                         if(PCuts.MaxEtNeg[ieta][iphi] > 10)
                         {
                             ElectonEtCompEt->Fill(PCuts.MaxEtNeg[ieta][iphi], GenEtNeg[ieta][iphi]);
@@ -492,6 +534,7 @@ CutAssessment::PrimDigiUse CutAssessment::PrimInfo(const edm::Event& iEvent, con
     //cout<<" test 2"<<endl;
     for(HcalTrigPrimDigiCollection::const_iterator tp = hfpr_digi->begin(); tp != hfpr_digi->end(); ++tp)
     {
+        
         if(abs(tp->id().ieta()) < 30 || abs(tp->id().ieta()) > 39) continue;
 
         double MaxEt = 0;
