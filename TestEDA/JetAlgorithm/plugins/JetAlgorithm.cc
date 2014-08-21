@@ -170,6 +170,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool isPosJet = false;
     bool isNegJet = false;
     bool isData = iEvent.isRealData();
+    vector<genJet> genJets;
+
     Jet myJet = Jet();
     myJet.pass = false;
     Jet HFarrayPos [40][72];
@@ -350,7 +352,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
-    for(unsigned int k = 0; k < pIn->size(); ++k)  //checks to see if any truth jets are in HF
+    for(unsigned int k = 0; k < pIn->size(); ++k)  
     {
              
       
