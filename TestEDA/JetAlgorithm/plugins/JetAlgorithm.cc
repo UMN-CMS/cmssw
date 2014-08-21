@@ -84,11 +84,17 @@ public:
         float seedEt;     //Energy of center cell
         float jetEt;      //Energy of 3x3 area centerd on cell
         bool pass;        //true means its a good jet seed cell false means its not
-
-
-
+        bool match;
+        float matchEta;
+        float matchPhi;
     };
-
+    struct genJet
+    {
+        float Et;
+        bool matchPass;
+        float matchiEta;
+        float matchiPhi;
+    };
 
 private:
     virtual void beginJob() override;
@@ -168,6 +174,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     myJet.pass = false;
     Jet HFarrayPos [40][72];
     Jet HFarrayNeg [40][72];
+    genJet myGenJet = genJet();
+    myGenJet.matchPass = false;
 
     cout << "is data: ";
     cout << isData << endl;
@@ -332,8 +340,22 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
-
-
+    for(int i = 31; i < 39; i++) //loops over ieta
+    {
+        for(int j = 3; j < 70; j+=2) //loops over iphi
+        {
+            if(HFarrayPos[i][j].pass)
+            {
+               // ->Fill(HFarrayPos[i][j].jetEt);
+            }
+        }
+    }
+    for(unsigned int k = 0; k < pIn->size(); ++k)  //checks to see if any truth jets are in HF
+    {
+             
+      
+  
+    }
 
 
 
