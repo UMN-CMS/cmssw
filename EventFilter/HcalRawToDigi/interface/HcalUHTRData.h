@@ -50,9 +50,10 @@ class HcalUHTRData {
     uint16_t value() const { return *m_ptr; }
 
     uint8_t adc() const;
-    uint8_t re_tdc() const;
-    uint8_t fe_tdc() const;
+    uint8_t le_tdc() const;
+    uint8_t te_tdc() const;
     bool soi() const;
+    bool ok() const;
 
     uint16_t operator*() const { return *m_ptr; }
 
