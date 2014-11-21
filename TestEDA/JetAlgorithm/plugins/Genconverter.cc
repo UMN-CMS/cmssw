@@ -14,6 +14,21 @@ Genconverter::Genconverter(const Genconverter& orig) { }
 
 Genconverter::~Genconverter() { }
 
+float Genconverter::IEta2Eta(int ieta)
+{
+    float eta = 0;
+    if(ieta < 40 && ieta > 29)
+    {
+        eta = (ieta-29.5)*.175+2.964;
+    }
+    return eta;
+}
+float Genconverter::IPhi2Phi(int iphi)
+{
+    float phi = M_PI*(iphi-1)/36;
+    return phi;
+}
+
 int Genconverter::Eta2IEta(double eta)
 {
     int etasign = (int) (fabs(eta) / eta);

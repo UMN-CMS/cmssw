@@ -14,6 +14,8 @@ public:
     Genconverter(const Genconverter& orig);
     virtual ~Genconverter();
     int Eta2IEta(double eta);
+    float IEta2Eta(int ieta);
+    float IPhi2Phi(int iphi);
     int Phi2Iphi(double phi, double eta);
 private:
 
