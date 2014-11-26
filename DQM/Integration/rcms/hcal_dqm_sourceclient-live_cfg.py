@@ -79,6 +79,9 @@ process.valHcalTriggerPrimitiveDigis.FrontEndFormatError = cms.untracked.bool(Tr
 process.HcalTPGCoderULUT.LUTGenerationMode = cms.bool(False)
 process.valHcalTriggerPrimitiveDigis.FG_threshold = cms.uint32(2)
 
+# Turn of HCAL Trigger Primative 1x1
+process.HcalTopologyIdeal.hcalTopologyConstants.triggerMode = cms.string('HcalTopologyMode::tm_LHC_RCT')
+
 # -------------------------------
 # Hcal DQM Modules
 # -------------------------------

@@ -132,6 +132,9 @@ process.prefer("GlobalTag")
 #process.GlobalTag.globaltag = 'GR09_31X_V6H::All' # or any other appropriate
 #process.es_prefer_GlobalTag = cms.ESPrefer('PoolDBESSource','GlobalTag')
 
+# Turn of HCAL Trigger Primative 1x1
+process.HcalTopologyIdeal.hcalTopologyConstants.triggerMode = cms.string('HcalTopologyMode::tm_LHC_RCT')
+
 #-----------------------------
 # ValGrind/Igprof Memory Check Information
 #------------------------------

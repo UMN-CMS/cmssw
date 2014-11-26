@@ -58,6 +58,10 @@ process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
 
+# Turn of HCAL Trigger Primative 1x1
+process.HcalTopologyIdeal.hcalTopologyConstants.triggerMode = cms.string('HcalTopologyMode::tm_LHC_RCT')
+
+
 #-----------------------------
 # Hcal DQM Source, including Rec Hit Reconstructor
 #-----------------------------
