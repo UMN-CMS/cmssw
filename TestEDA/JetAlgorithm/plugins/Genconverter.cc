@@ -21,12 +21,16 @@ float Genconverter::IEta2Eta(int ieta)
     {
         eta = (ieta-29.5)*.175+2.964;
     }
+    else if(ieta < -29 && ieta > -40)
+    {
+        eta = -1*((fabs(ieta)-29.5)*.175+2.964);
+    }
     return eta;
 }
 float Genconverter::IPhi2Phi(int iphi)
 {
     float phi = M_PI*(iphi-1)/36;
-    return phi;
+return phi;
 }
 
 int Genconverter::Eta2IEta(double eta)
