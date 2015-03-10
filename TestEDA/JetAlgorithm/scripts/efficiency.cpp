@@ -14,7 +14,7 @@ int efficiency()
 
     TFile* inTfile = new TFile(inFile.c_str());
 
-    const int numberOfHists = 6;
+    const int numberOfHists = 8;
     TH1D* histograms[numberOfHists];
     inTfile->GetObject("/jetFinder/EtMatched", histograms[0]);
     inTfile->GetObject("/jetFinder/Et", histograms[1]);
@@ -22,6 +22,8 @@ int efficiency()
     inTfile->GetObject("/jetFinder/Eta", histograms[3]);
     inTfile->GetObject("/jetFinder/PhiMatched", histograms[4]);
     inTfile->GetObject("/jetFinder/Phi", histograms[5]);
+    inTfile->GetObject("/jetFinder/absEtaMatched", histograms[6]);
+    inTfile->GetObject("/jetFinder/absEta", histograms[7]);
     for (int i = 0; i < numberOfHists; ++i)
     {
         if (!histograms[i])
@@ -38,12 +40,13 @@ int efficiency()
     TGraphAsymmErrors* etEffPlot = new TGraphAsymmErrors(histograms[0], histograms[1], "-b");
     TGraphAsymmErrors* etaEffPlot = new TGraphAsymmErrors(histograms[2], histograms[3], "-b");
     TGraphAsymmErrors* phiEffPlot = new TGraphAsymmErrors(histograms[4], histograms[5], "-b");
-    
+    TGraphAsymmErrors* absEtaEffPlot = new TGraphAsymmErrors(histograms[6], histograms[7], "-b");
 
     TFile f(outFile.c_str(), "recreate");
     etEffPlot->Write();
     etaEffPlot->Write();
     phiEffPlot->Write();
+    absEtaEffPlot->Write();
     f.Close();
 
 

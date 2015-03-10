@@ -27,10 +27,18 @@ float Genconverter::IEta2Eta(int ieta)
     }
     return eta;
 }
-float Genconverter::IPhi2Phi(int iphi)
+float Genconverter::IPhi2Phi(int iphi)  //returns the middle of the cell in radians
 {
-    float phi = M_PI*(iphi-1)/36;
-return phi;
+    double phi;
+    if(iphi < 37)
+    {
+        phi = 5*iphi-2.5;
+    }else
+    {
+        phi = 5*(iphi-72)-2.5;
+    }
+    phi *= M_PI/180;  //convert to radians
+    return phi;
 }
 
 int Genconverter::Eta2IEta(double eta)
