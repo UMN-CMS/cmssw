@@ -51,11 +51,14 @@ process.load('SimCalorimetry.HcalTrigPrimProducers.hcaltpdigiData_cff')
 
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False))
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 if(isData):
-      #TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/085550A9-3EDC-E111-AA7F-5404A63886BE.root','file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/08E28448-79DC-E111-9F48-5404A63886C5.root', 'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root']
-      TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/02E206EC-31EB-E111-B28B-0025901D625A.root']
+      TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/085550A9-3EDC-E111-AA7F-5404A63886BE.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root', 
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/08E28448-79DC-E111-9F48-5404A63886C5.root', 
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root']
+      #TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/02E206EC-31EB-E111-B28B-0025901D625A.root']
               
       
 else:
@@ -71,7 +74,7 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("DataDIGIoutput.root"),
+    fileName = cms.untracked.string("/data/whybee0b/user/aevans/DataDIGIoutput.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
     outputCommands = cms.untracked.vstring( 'keep *HcalTrigger*_*_*_*')
 )

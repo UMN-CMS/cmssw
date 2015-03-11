@@ -9,13 +9,14 @@
 
 int efficiency()
 {
-    std::string inFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/jets.root";
-    std::string outFile = "eff.root";
+    std::string inFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/MCJets.root";
+    std::string outFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/eff.root";
 
     TFile* inTfile = new TFile(inFile.c_str());
 
     const int numberOfHists = 8;
     TH1D* histograms[numberOfHists];
+    
     inTfile->GetObject("/jetFinder/EtMatched", histograms[0]);
     inTfile->GetObject("/jetFinder/Et", histograms[1]);
     inTfile->GetObject("/jetFinder/EtaMatched", histograms[2]);
@@ -24,6 +25,10 @@ int efficiency()
     inTfile->GetObject("/jetFinder/Phi", histograms[5]);
     inTfile->GetObject("/jetFinder/absEtaMatched", histograms[6]);
     inTfile->GetObject("/jetFinder/absEta", histograms[7]);
+    /*
+    inTfile->GetObject("/jetFinder/trigJetEt", histograms[0]);
+    inTfile->GetObject("/jetFinder/HFEt", histograms[1]);
+    */
     for (int i = 0; i < numberOfHists; ++i)
     {
         if (!histograms[i])
@@ -38,15 +43,18 @@ int efficiency()
     }
 
     TGraphAsymmErrors* etEffPlot = new TGraphAsymmErrors(histograms[0], histograms[1], "-b");
+    
     TGraphAsymmErrors* etaEffPlot = new TGraphAsymmErrors(histograms[2], histograms[3], "-b");
     TGraphAsymmErrors* phiEffPlot = new TGraphAsymmErrors(histograms[4], histograms[5], "-b");
     TGraphAsymmErrors* absEtaEffPlot = new TGraphAsymmErrors(histograms[6], histograms[7], "-b");
-
+    
     TFile f(outFile.c_str(), "recreate");
     etEffPlot->Write();
+    
     etaEffPlot->Write();
     phiEffPlot->Write();
     absEtaEffPlot->Write();
+    
     f.Close();
 
 

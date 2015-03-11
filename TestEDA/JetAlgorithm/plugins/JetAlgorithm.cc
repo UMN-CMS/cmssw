@@ -166,7 +166,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     //Generic Constructor For TH2D: (const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) I'm choosing x to be ieta and y to iphi
     HFEtPos = fs->make<TH2D>("HFEtPos", "Forward HF Et", 10, 30, 40, 72, 0.0, 72);
     HFEtNeg = fs->make<TH2D>("HFEtNeg", "Backward HF Et", 10, 30, 40, 72, 0.0, 72);
-    HFEt = fs->make<TH1D>("HFEt", "GenJet Et", 100, 0.0, 300);
+    HFEt = fs->make<TH1D>("HFEt", "GenJet Et", 100, 0.0, 100);
     HFPosJets = fs->make<TH1D>("HFPosJets", "Positive HF 3x3 Jet Et", 100, 0.0, 300);
     HFNegJets = fs->make<TH1D>("HFNegJets", "Negative HF 3x3 Jet Et", 100, 0.0, 300);
     HFNegRatio = fs->make<TH1D>("HFNegRatio", "Neg HF 3x3 vs Seed Ratio", 50, 0.0, 1.1);
@@ -349,8 +349,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 HFEtNeg->SetBinContent(abs(tp->id().ieta())-30,tp->id().iphi()+1, outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
                 if(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) > .01 && tp->id().iphi() == 71)
                 {
-                    //                    cout << "Setting Bin Content for HFEtNeg" << endl;
-                    cout << outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) << endl;
+                //    cout << "Setting Bin Content for HFEtNeg" << endl;
+                //    cout << outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) << endl;
                 }
             }
             else if (tp->id().ieta() > 0 && (isPosJet || isData))
@@ -361,8 +361,8 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 HFEtPos->SetBinContent(tp->id().ieta()-30,tp->id().iphi()+1, outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
                 if(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) > .01)
                 {
-                    //                  cout << "Setting Bin Content for HFEtPos" << endl;
-                    //                cout << outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) << endl;
+                //    cout << "Setting Bin Content for HFEtPos" << endl;
+                //    cout << outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) << endl;
                 }
             }
             /*    cout << tp->id().ieta() << " and " << tp->id().iphi() <<endl;
@@ -417,7 +417,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                 }
 
-                if(/*EtArrayNeg [i][j] > 10 &&*/ isNegJet)  //10GeV seed cell threshhold
+                if(EtArrayNeg [i][j] > 10 && (isNegJet || isData))  //10GeV seed cell threshhold
                 {
                     NegJets [i][j] = EtArrayNeg [i-1][left] + EtArrayNeg [i-1][j] + EtArrayNeg [i-1][right] +
                         EtArrayNeg [i][left]   + EtArrayNeg [i][j]   + EtArrayNeg [i][right]   +
@@ -429,6 +429,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                             EtArrayNeg [i][j] > EtArrayNeg [i+1][left] && EtArrayNeg [i][j] > EtArrayNeg [i+1][j]   && EtArrayNeg [i][j] > EtArrayNeg [i+1][right] 
                             && NegJets [i][j] > 10)
                     {
+                        cout << "Made Trigger Jet in NegHF" << endl;
                         trigNegJets++;
                         HFarrayNeg[i][j].jetEt = NegJets [i][j];
                         HFarrayNeg[i][j].seedEt = EtArrayNeg [i][j];
@@ -453,7 +454,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 {
                     HFarrayNeg[i][j].pass = false;
                 }
-                if(/*EtArrayPos [i][j] > 10 &&*/ isPosJet)   //10GeV seed cell threshhold
+                if(EtArrayPos [i][j] > 10 && (isPosJet || isData))   //10GeV seed cell threshhold
                 {
                     PosJets [i][j] = EtArrayPos [i-1][left] + EtArrayPos [i-1][j] + EtArrayPos [i-1][right] +
                         EtArrayPos [i][left]   + EtArrayPos [i][j]   + EtArrayPos [i][right]   +
@@ -465,6 +466,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                             EtArrayPos [i][j] > EtArrayPos [i+1][left] && EtArrayPos [i][j] > EtArrayPos [i+1][j]   && EtArrayPos [i][j] > EtArrayPos [i+1][right]
                             && PosJets[i][j] > 10)
                     {
+                        cout << "Made Trigger Jet in PosHF" << endl;
                         trigPosJets++;
                         HFarrayPos[i][j].jetEt = PosJets [i][j];
                         HFarrayPos[i][j].seedEt = EtArrayPos [i][j];
@@ -574,12 +576,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         }
 
 
-        /*    
-              cout << trigNegJets << endl;
-              cout << trigPosJets << endl;
-              cout << genJetsNegHF << endl;
-              cout << genJetsPosHF << endl; 
-              */
+
         for(unsigned int i = 0; i < negGenJets.size(); ++i)  //loops over gen jets again
         {
             if(negGenJets.at(i).matchPass)  //checks for a gen jet which was a close delta R match
@@ -612,6 +609,12 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
+    cout << "Number of negative and positive trigger jets so far:" << endl;
+    cout << trigNegJets << endl;
+    cout << trigPosJets << endl;
+    //         cout << genJetsNegHF << endl;
+    //         cout << genJetsPosHF << endl;
+
     //A silly bit of code to check the deltaR algorithm
     /*  int cand1 [16] = {1, 1, 1, 1, 2, 2, 2, 2, 72, 72, 72, 72, 71, 71, 71, 71};
         int cand2 [16] = {1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71};

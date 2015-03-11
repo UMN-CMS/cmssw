@@ -75,7 +75,7 @@ fileNames = cms.untracked.vstring(TempFN )
 )
 
 process.out = cms.OutputModule( "PoolOutputModule",
-    fileName = cms.untracked.string("MCDIGIoutput.root"),
+    fileName = cms.untracked.string("/data/whybee0b/user/aevans/digis/MCDIGIoutput.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
     outputCommands = cms.untracked.vstring( 'keep *_simHcalTriggerPrimitiveDigis_*_*',
                                             'keep *_ak5GenJets_*_*')
