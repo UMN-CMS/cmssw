@@ -146,6 +146,7 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* trigJetPhi;
         TH1D* trigJetIPhi;
         TH1D* numTrigJets;
+        TH1D* EtPUHist;
 
 };
 
@@ -188,6 +189,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     trigJetPhi = fs->make<TH1D>("trigJetPhi", "trigger Jet Phi", 100, -5.0, 5.0);
     trigJetIPhi = fs->make<TH1D>("trigJetIPhi", "trigger Jet IPhi", 76, -1.0, 74);
     numTrigJets = fs->make<TH1D>("numTrigJets", "Number of Trigger Jets In Event", 10, 0, 10);
+    EtPUHist = fs->make<TH1D>("EtPU", "Average Et Outside of Trigger Jets", 20, 0, 20);
 
 
 }
@@ -216,14 +218,24 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double NegJets [40][72];
     double dR;
 
+    double seedThreshold = 10;
+    double jetThreshold = 10;
+    double genJetThreshold = 10;
+
+    double totalHFEt = 0;
+    double totalTrigJetEt = 0;
+    double EtPU = 0;
+
     int passed;
     int left;
     int right;
-    int eventTrigJets = 0;
+    int eventPosTrigJets = 0;
+    int eventNegTrigJets = 0;
     //    bool nonZero = false;
     bool isPosJet = false;
     bool isNegJet = false;
     bool isData = iEvent.isRealData();
+    bool pileUpSubtracting = true;
     vector<genJet> negGenJets;
     vector<genJet> posGenJets;
 
@@ -269,7 +281,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         {
             //      cout << "Eta Values: ";
             //      cout << pIn->at(k).eta() << endl;
-            if(pIn->at(k).et() > 10)                   //makes sure that each jet has at least 10GeV of transverse energy
+            if(pIn->at(k).et() > genJetThreshold)                   //makes sure that each jet has at least 10GeV of transverse energy
             {    
                 if(pIn->at(k).eta() > 2.964 && pIn->at(k).eta() < 4.716)
                 {
@@ -350,6 +362,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 EtArrayNeg [abs(tp->id().ieta())][tp->id().iphi()+1] = outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt());
                 HFEtNeg->SetBinContent(abs(tp->id().ieta())-30,tp->id().iphi(), outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
                 HFEtNeg->SetBinContent(abs(tp->id().ieta())-30,tp->id().iphi()+1, outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()));
+                
                 if(outTranscoder->hcaletValue(tp->id(), tp->SOI_compressedEt()) > .01 && tp->id().iphi() == 71)
                 {
                 //    cout << "Setting Bin Content for HFEtNeg" << endl;
@@ -419,8 +432,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                           } */   
 
                 }
-
-                if(EtArrayNeg [i][j] > 10 && (isNegJet || isData))  //10GeV seed cell threshhold
+                totalHFEt += EtArrayNeg [i][j];
+                totalHFEt += EtArrayPos [i][j];
+                if(EtArrayNeg [i][j] > seedThreshold && (isNegJet || isData))  //Seed cell threshold
                 {
                     NegJets [i][j] = EtArrayNeg [i-1][left] + EtArrayNeg [i-1][j] + EtArrayNeg [i-1][right] +
                         EtArrayNeg [i][left]   + EtArrayNeg [i][j]   + EtArrayNeg [i][right]   +
@@ -430,12 +444,13 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     if(EtArrayNeg [i][j] > EtArrayNeg [i-1][left] && EtArrayNeg [i][j] > EtArrayNeg [i-1][j]   && EtArrayNeg [i][j] > EtArrayNeg [i-1][right] &&
                             EtArrayNeg [i][j] > EtArrayNeg [i][left]                                                && EtArrayNeg [i][j] > EtArrayNeg [i][right]   &&
                             EtArrayNeg [i][j] > EtArrayNeg [i+1][left] && EtArrayNeg [i][j] > EtArrayNeg [i+1][j]   && EtArrayNeg [i][j] > EtArrayNeg [i+1][right] 
-                            && NegJets [i][j] > 10)
+                            && NegJets [i][j] > jetThreshold) //total energy threshold
                     {
                         cout << "Made Trigger Jet in NegHF" << endl;
                         trigNegJets++;
-                        eventTrigJets++;
+                        eventNegTrigJets++;
                         HFarrayNeg[i][j].jetEt = NegJets [i][j];
+                        totalTrigJetEt += NegJets[i][j];
                         HFarrayNeg[i][j].seedEt = EtArrayNeg [i][j];
                         HFarrayNeg[i][j].pass = true; //initial true setting for whether it is a good jet
                         trigJetEt->Fill(NegJets [i][j]);
@@ -458,7 +473,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 {
                     HFarrayNeg[i][j].pass = false;
                 }
-                if(EtArrayPos [i][j] > 10 && (isPosJet || isData))   //10GeV seed cell threshhold
+                if(EtArrayPos [i][j] > seedThreshold && (isPosJet || isData))   //Seed cell threshold
                 {
                     PosJets [i][j] = EtArrayPos [i-1][left] + EtArrayPos [i-1][j] + EtArrayPos [i-1][right] +
                         EtArrayPos [i][left]   + EtArrayPos [i][j]   + EtArrayPos [i][right]   +
@@ -468,12 +483,13 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     if(EtArrayPos [i][j] > EtArrayPos [i-1][left] && EtArrayPos [i][j] > EtArrayPos [i-1][j]   && EtArrayPos [i][j] > EtArrayPos [i-1][right] &&
                             EtArrayPos [i][j] > EtArrayPos [i][left]                                                && EtArrayPos [i][j] > EtArrayPos [i][right]   &&
                             EtArrayPos [i][j] > EtArrayPos [i+1][left] && EtArrayPos [i][j] > EtArrayPos [i+1][j]   && EtArrayPos [i][j] > EtArrayPos [i+1][right]
-                            && PosJets[i][j] > 10)
+                            && PosJets[i][j] > jetThreshold) //total energy threshold
                     {
                         cout << "Made Trigger Jet in PosHF" << endl;
                         trigPosJets++;
-                        eventTrigJets++;
+                        eventPosTrigJets++;
                         HFarrayPos[i][j].jetEt = PosJets [i][j];
+                        totalTrigJetEt += EtArrayPos [i][j];
                         HFarrayPos[i][j].seedEt = EtArrayPos [i][j];
                         HFarrayPos[i][j].pass = true;                       //initial true setting for whether it is a good jet
                         trigJetEt->Fill(PosJets [i][j]);
@@ -499,7 +515,18 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
-    numTrigJets->Fill(eventTrigJets);
+    numTrigJets->Fill(eventPosTrigJets+eventNegTrigJets);
+    //Pileup subtraction.  Now, it loops over every cell to find the total energy in HF, then subtracts the newly made jet energies.  Then averages over the number of cells in HF (minus the ones taken up by a jet).  It then subtracts that average energy (multiplied by 9) from each trigger jet and evaluates whether or not the trigger jet is still valid (passes seed threshold and total threshold) if it no longer passes it throws it in the average and loops back through (and adjusts the number of jets in the event accordingly)
+    while(pileUpSubtracting)
+    {
+        //cout << "PU Time! YAY" << endl;
+        //Initial average Et per bin
+        EtPU = (totalHFEt - totalTrigJetEt)/(324-(trigPosJets + trigNegJets)*9);
+        //cout << EtPU << endl;
+        EtPUHist->Fill(EtPU);
+        pileUpSubtracting = false;
+    }
+    
     if(!isData)
     {
         for(unsigned int n = 0; n < pIn->size(); ++n)  //checks to see if any truth jets are in HF and fills genJets vectors
