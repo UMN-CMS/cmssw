@@ -145,6 +145,7 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* trigJetEta;
         TH1D* trigJetPhi;
         TH1D* trigJetIPhi;
+        TH1D* numTrigJets;
 
 };
 
@@ -186,6 +187,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     trigJetEta = fs->make<TH1D>("trigJetEta", "trigger Jet Eta", 50, -5.0, 5.0);
     trigJetPhi = fs->make<TH1D>("trigJetPhi", "trigger Jet Phi", 100, -5.0, 5.0);
     trigJetIPhi = fs->make<TH1D>("trigJetIPhi", "trigger Jet IPhi", 76, -1.0, 74);
+    numTrigJets = fs->make<TH1D>("numTrigJets", "Number of Trigger Jets In Event", 10, 0, 10);
 
 
 }
@@ -217,6 +219,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     int passed;
     int left;
     int right;
+    int eventTrigJets = 0;
     //    bool nonZero = false;
     bool isPosJet = false;
     bool isNegJet = false;
@@ -431,6 +434,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     {
                         cout << "Made Trigger Jet in NegHF" << endl;
                         trigNegJets++;
+                        eventTrigJets++;
                         HFarrayNeg[i][j].jetEt = NegJets [i][j];
                         HFarrayNeg[i][j].seedEt = EtArrayNeg [i][j];
                         HFarrayNeg[i][j].pass = true; //initial true setting for whether it is a good jet
@@ -468,6 +472,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     {
                         cout << "Made Trigger Jet in PosHF" << endl;
                         trigPosJets++;
+                        eventTrigJets++;
                         HFarrayPos[i][j].jetEt = PosJets [i][j];
                         HFarrayPos[i][j].seedEt = EtArrayPos [i][j];
                         HFarrayPos[i][j].pass = true;                       //initial true setting for whether it is a good jet
@@ -494,6 +499,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
+    numTrigJets->Fill(eventTrigJets);
     if(!isData)
     {
         for(unsigned int n = 0; n < pIn->size(); ++n)  //checks to see if any truth jets are in HF and fills genJets vectors
