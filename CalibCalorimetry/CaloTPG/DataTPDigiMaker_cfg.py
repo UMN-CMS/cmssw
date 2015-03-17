@@ -29,6 +29,8 @@ process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
 process.load('Configuration.StandardSequences.L1Reco_cff')
 process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 
+process.load('L1Trigger.Configuration.L1Extra_cff')
+
 #############added
 
 #################3added
@@ -50,7 +52,7 @@ process.load('SimCalorimetry.HcalTrigPrimProducers.hcaltpdigiData_cff')
 
 
 
-process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False))
+process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 if(isData):
@@ -76,7 +78,8 @@ fileNames = cms.untracked.vstring(TempFN )
 process.out = cms.OutputModule( "PoolOutputModule",
     fileName = cms.untracked.string("/data/whybee0b/user/aevans/DataDIGIoutput.root"),
     SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-    outputCommands = cms.untracked.vstring( 'keep *HcalTrigger*_*_*_*')
+    outputCommands = cms.untracked.vstring( 'keep *_*simHcalTriggerPr*_*_*','keep *_*_*Forward*_*')
+    
 )
 
 ###--- (3) Re-RECO from RAW ---###
@@ -159,10 +162,10 @@ if(isData):
     new_filename="fdata/"+new_filename
 else:
     new_filename="fmc/"+new_filename
-new_filename="Datatest.root"
-process.TFileService = cms.Service("TFileService",
+    new_filename="Datatest.root"
+    process.TFileService = cms.Service("TFileService",
     fileName = cms.string(new_filename)
-)
+    )
 #process.histos = cms.EDAnalyzer("HcalTriggerDigiDump")
 
 ###--- Assemble everything ---###
@@ -191,13 +194,14 @@ process.endjob_step = cms.EndPath(process.out)
 #process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs + process.dump + process.rctDigis )
 
 if( isData):
-    process.p = cms.Path(process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis+process.lumiProducer)
+    process.p = cms.Path(process.L1Extra + process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis+process.lumiProducer)
     #process.reconstructionFromRawSequence+
     #process.p = cms.Path(process.reconstructionFromRawSequence+ process.calibPreSequence  + process.simHcalTriggerPrimitiveDigis + process.DataAna+process.FullGraph)
 else:
     process.p = cms.Path( process.calibPreSequence + process.simHcalTriggerPrimitiveDigis + process.test + process.CutAs)
-process.RECOSIMoutput_step = cms.EndPath(process.out)
+#process.RECOSIMoutput_step = cms.EndPath(process.out)
 
-process.schedule = cms.Schedule(process.raw2digi_step,process.p,process.endjob_step,process.RECOSIMoutput_step)
+process.schedule = cms.Schedule(process.raw2digi_step,process.p,process.endjob_step)
+
 
 
