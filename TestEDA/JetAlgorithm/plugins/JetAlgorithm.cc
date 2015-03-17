@@ -67,6 +67,8 @@ Implementation:
 #include <math.h>
 //Zach's Converter
 #include "TestEDA/CutAssessment/interface/Genconverter.h"
+//L1 Jets
+#include "DataFormats/L1Trigger/interface/L1JetParticle.h"
 
 
 
@@ -147,6 +149,7 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* trigJetIPhi;
         TH1D* numTrigJets;
         TH1D* EtPUHist;
+        TH1D* L1JetPt;
         //    TH1D* EtPUHistwJets;
 
 };
@@ -191,6 +194,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     trigJetIPhi = fs->make<TH1D>("trigJetIPhi", "trigger Jet IPhi", 76, -1.0, 74);
     numTrigJets = fs->make<TH1D>("numTrigJets", "Number of Trigger Jets In Event", 10, 0, 10);
     EtPUHist = fs->make<TH1D>("EtPU", "Average Et Outside of Trigger Jets", 80, 0, 20);
+    L1JetPt = fs->make<TH1D>("L1JetPt","L1 Jet Pt",100, 0.0, 100.0);
     //  EtPUHistwJets = fs->make<TH1D>("EtPUwJets", "Average Et Outside of Trigger Jets in Events with a Trigger Jet", 80, 0, 20);
 
 }
@@ -268,6 +272,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     Handle<std::vector<reco::GenJet>> pIn;
     if(!isData)
     {
+        
         iEvent.getByLabel("ak5GenJets", pIn); //gets truth ak5 jets
     }
     edm::Service<TFileService> fs;
@@ -280,7 +285,20 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // Also, I need to convert from compressed Et to real Et: I think this is done by the outTranscoder.  This sequence may need modification pending talking to Zach
     edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
     iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
-
+    
+    if(isData)
+    {
+        cout << "Getting l1jets!" << endl;
+        Handle<std::vector<l1extra::L1JetParticle>> l1jets;
+        cout << "Looping over them" << endl;
+        for(unsigned int iJet = 0; iJet < l1jets->size(); ++iJet)
+        {
+            cout << "Filling Jet: ";
+            cout << iJet << endl;
+            L1JetPt->Fill(l1jets->at(iJet).pt());
+        }
+    
+    }
     if(!isData)
     {
         for(unsigned int k = 0; k < pIn->size(); ++k)  //loops over all ak5 jest and checks if they are in HF
