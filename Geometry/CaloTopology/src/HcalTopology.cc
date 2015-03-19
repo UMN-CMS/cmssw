@@ -63,7 +63,29 @@ HcalTopology::HcalTopology(HcalTopologyMode::Mode mode, int maxDepthHB, int maxD
 
 bool HcalTopology::valid(const DetId& id) const {
   assert(id.det()==DetId::Hcal);
+  if (HcalSubdetector(id.subdetId())==HcalTriggerTower) return validHT(id);
   return validHcal(id);
+}
+
+bool HcalTopology::validHT(const HcalTrigTowerDetId& id) const {
+
+  if (id.iphi()<1 || id.iphi()>72 || id.ieta()==0) return false;
+  if (id.version()==0) {
+    if (id.ietaAbs()>32 || (triggerMode_==HcalTopologyMode::tm_LHC_1x1 && id.ietaAbs()>27)) return false;
+    if (id.ietaAbs()>28) {
+      int iphi=id.iphi();
+      if ((iphi/4)*4 + 1 != iphi) return false;
+      iphi = iphi/4 + 1;
+      if (iphi > 18) return false;
+    }
+  } else { // version==1
+    if (triggerMode_==HcalTopologyMode::tm_LHC_RCT) return false;
+    if (id.ietaAbs()<28 || id.ietaAbs()>41) return false;
+    if (id.ietaAbs()>29 && ((id.iphi()%2)==0)) return false;
+    if (id.ietaAbs()>39 && ((id.iphi()%4)!=3)) return false;
+  }
+  return true;
+
 }
 
 bool HcalTopology::validHcal(const HcalDetId& id) const {
@@ -699,20 +721,50 @@ unsigned int HcalTopology::detId2denseIdHF(const DetId& id) const {
 }
 
 unsigned int HcalTopology::detId2denseIdHT(const DetId& id) const {
-  HcalTrigTowerDetId tid(id); 
-  int zside = tid.zside();
-  unsigned int ietaAbs = tid.ietaAbs();
-  unsigned int iphi = tid.iphi();
+  const HcalTrigTowerDetId tid(id);
+  const int zside = tid.zside();
+  const unsigned int ietaAbs = tid.ietaAbs();
+  const unsigned int iphi = tid.iphi();
+  // LHC Run 1
+  if (tid.version() == 0) {
+    unsigned int index;
+    if ((iphi-1)%4 == 0) {
+      index = (iphi-1)*32 + (ietaAbs-1) - (12*((iphi-1)/4));
+    } else {
+      index = (iphi-1)*28 + (ietaAbs-1) + (4*(((iphi-1)/4)+1));
+    }
 
-  unsigned int index;
-  if ((iphi-1)%4==0) index = (iphi-1)*32 + (ietaAbs-1) - (12*((iphi-1)/4));
-  else               index = (iphi-1)*28 + (ietaAbs-1) + (4*(((iphi-1)/4)+1));
-  
     if (zside == -1) {
       index += kHThalfPhase0;
     }
 
-  return index;
+    return index;
+  }
+  // HF 1x1 summing and LHC Run 1 simultaneously
+  else if (tid.version() == 1) {
+    int offset = kHTSizePhase0;
+    if (zside == -1) {
+      // The negative ieta values are stored on the back half of the part of
+      // the array reserved for the new segmentation. kHTSizePhase1 is
+      // kHTSizePhase0 + the size of the Version 1 bit on the end, so we
+      // subtract off kHTSizePhase0 and then divid by 2 to find the halfway
+      // point.
+      offset += (kHTSizePhase1 - kHTSizePhase0) / 2;
+    }
+    // ieta 28, 29 have 72 iph
+    if (28 <= ietaAbs && ietaAbs <= 29) {
+      return 72 * (ietaAbs - 28) + (iphi - 1) + offset;
+    }
+    // ieta 30-41 have 36 iphi (1,3,5,7,...)
+    else if (30 <= ietaAbs && ietaAbs <= 41) {
+      offset += 2 * 72;  // Accounting for ieta 28, 29
+      // (iphi - 1)/2 takes 1,3,5... to 0,1,2...
+      return 36 * (ietaAbs - 30) + ((iphi - 1)/2) + offset;
+    }
+  }
+
+  // Return -1 if passed an unhandled version or ieta
+  return -1;
 }
 
 unsigned int HcalTopology::detId2denseIdCALIB(const DetId& id) const {
