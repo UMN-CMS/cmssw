@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
+#include "DataFormats/HcalDetId/interface/HcalTrigTowerDetId.h"
 #include "Geometry/CaloTopology/interface/CaloSubdetectorTopology.h"
 #include "Geometry/CaloTopology/interface/HcalTopologyMode.h"
 
@@ -25,7 +26,7 @@
 class HcalTopology : public CaloSubdetectorTopology {
 public:
 
-  HcalTopology( HcalTopologyMode::Mode mode, int maxDepthHB, int maxDepthHE, HcalTopologyMode::TriggerMode tmode=HcalTopologyMode::tm_LHC_PreLS1);
+  HcalTopology( HcalTopologyMode::Mode mode, int maxDepthHB, int maxDepthHE, HcalTopologyMode::TriggerMode tmode=HcalTopologyMode::tm_LHC_RCT_and_1x1);
 	
   HcalTopologyMode::Mode mode() const {return mode_;}
   HcalTopologyMode::TriggerMode triggerMode() const { return triggerMode_; }
@@ -50,6 +51,8 @@ public:
   virtual bool valid(const DetId& id) const;
   /** Is this a valid cell id? */
   bool validHcal(const HcalDetId& id) const;
+  /** Is this a valid hcal trigger cell id? */
+  bool validHT(const HcalTrigTowerDetId& id) const;
   /** Get the neighbors of the given cell in east direction*/
   virtual std::vector<DetId> east(const DetId& id) const;
   /** Get the neighbors of the given cell in west direction*/
