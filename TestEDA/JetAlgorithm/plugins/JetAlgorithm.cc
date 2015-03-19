@@ -102,6 +102,7 @@ class JetAlgorithm : public edm::EDAnalyzer
             float matchEta;
             float matchPhi;
             int genId;
+            float seedTotalR;
         };
         struct genJet
         {
@@ -150,6 +151,9 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* numTrigJets;
         TH1D* EtPUHist;
         TH1D* L1JetPt;
+        TH1D* trigJetSeedTotalR;
+        TH1D* matchedTrigJetEt;
+        TH1D* matchedGenTrigEtR;
         //    TH1D* EtPUHistwJets;
 
 };
@@ -194,7 +198,10 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     trigJetIPhi = fs->make<TH1D>("trigJetIPhi", "trigger Jet IPhi", 76, -1.0, 74);
     numTrigJets = fs->make<TH1D>("numTrigJets", "Number of Trigger Jets In Event", 10, 0, 10);
     EtPUHist = fs->make<TH1D>("EtPU", "Average Et Outside of Trigger Jets", 80, 0, 20);
-    L1JetPt = fs->make<TH1D>("L1JetPt","L1 Jet Pt",100, 0.0, 100.0);
+    L1JetPt = fs->make<TH1D>("L1JetPt","L1 Jet Pt", 20, 0.0, 100.0);
+    trigJetSeedTotalR = fs->make<TH1D>("trigJetSeedTotalR","trigger Jet Seed to Total Ratio",10, 0.0, 1.0);
+    matchedTrigJetEt = fs->make<TH1D>("matchedTrigJetEt","Et of matched trigger jets",100,0.0,100.0);
+    matchedGenTrigEtR = fs->make<TH1D>("matchedGenTrigEtR","Ratio of matched Gen and Trig Jet Et",100,0.0,10.0);
     //  EtPUHistwJets = fs->make<TH1D>("EtPUwJets", "Average Et Outside of Trigger Jets in Events with a Trigger Jet", 80, 0, 20);
 
 }
@@ -236,6 +243,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double EtPUNeg = 0;
     double EtPUPos = 0;
 
+
     int passed;
     int left;
     int right;
@@ -272,7 +280,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     Handle<std::vector<reco::GenJet>> pIn;
     if(!isData)
     {
-        
+
         iEvent.getByLabel("ak5GenJets", pIn); //gets truth ak5 jets
     }
     edm::Service<TFileService> fs;
@@ -285,11 +293,12 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // Also, I need to convert from compressed Et to real Et: I think this is done by the outTranscoder.  This sequence may need modification pending talking to Zach
     edm::Handle<HcalTrigPrimDigiCollection> hfpr_digi;
     iEvent.getByLabel("simHcalTriggerPrimitiveDigis", hfpr_digi);
-    
+
     if(isData)
     {
         cout << "Getting l1jets!" << endl;
         Handle<std::vector<l1extra::L1JetParticle>> l1jets;
+        iEvent.getByLabel(edm::InputTag("l1extraParticles","Forward"), l1jets);
         cout << "Looping over them" << endl;
         for(unsigned int iJet = 0; iJet < l1jets->size(); ++iJet)
         {
@@ -297,7 +306,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             cout << iJet << endl;
             L1JetPt->Fill(l1jets->at(iJet).pt());
         }
-    
+
     }
     if(!isData)
     {
@@ -476,6 +485,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         HFarrayNeg[i][j].jetEt = NegJets [i][j];
                         totalNegTrigJetEt += NegJets[i][j];
                         HFarrayNeg[i][j].seedEt = EtArrayNeg [i][j];
+                        HFarrayNeg[i][j].seedTotalR = EtArrayNeg[i][j]/NegJets[i][j];
                         HFarrayNeg[i][j].pass = true; //initial true setting for whether it is a good jet
                         if(HFarrayNeg[i][j].jetEt < 0)
                         {
@@ -511,6 +521,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         HFarrayPos[i][j].jetEt = PosJets [i][j];
                         totalPosTrigJetEt += EtArrayPos [i][j];
                         HFarrayPos[i][j].seedEt = EtArrayPos [i][j];
+                        HFarrayPos[i][j].seedTotalR = EtArrayPos[i][j]/PosJets[i][j];
                         HFarrayPos[i][j].pass = true;                       //initial true setting for whether it is a good jet
                     }
                     else
@@ -599,7 +610,123 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     EtPUHist->Fill(EtPUPos);
     numTrigJets->Fill(eventPosTrigJets+eventNegTrigJets);
     //Now that all the further jet criteria have been applied, its time to fill the trigger Jet histograms
+    if(!isData)
+    {
+        for(unsigned int n = 0; n < pIn->size(); ++n)  //checks to see if any truth jets are in HF and fills genJets vectors
+        { 
+            if(pIn->at(n).eta() < -2.964 && pIn->at(n).eta() > -4.716 && pIn->at(n).et() > 10)
+            {
+                genJet aGenJet = genJet();
+                aGenJet.Et = pIn->at(n).et();
+                aGenJet.eta = pIn->at(n).eta();
+                aGenJet.phi = pIn->at(n).phi();
+                aGenJet.matchPass = false;
+                aGenJet.id = n;
+                negGenJets.push_back(aGenJet);
+            }
+            if(pIn->at(n).eta() > 2.964 && pIn->at(n).eta() < 4.716 && pIn->at(n).et() > 10)
+            {
+                genJet aGenJet = genJet();
+                aGenJet.Et = pIn->at(n).et();
+                aGenJet.eta = pIn->at(n).eta();
+                aGenJet.phi = pIn->at(n).phi();
+                aGenJet.matchPass = false;
+                aGenJet.id = n;
+                posGenJets.push_back(aGenJet);
+            }
 
+        }
+
+
+
+        for(int l = 31; l < 40; l++) //loops over ieta
+        {
+            for(int m = 1; m < 72; m+=2) //loops over iphi
+            {
+                if(HFarrayPos[l][m].pass)  //checks for a good trig jet which passes criteria enforced above
+                {
+                    passed = 0; 
+                    dR = 100;
+                    HFarrayPos[l][m].match = false;
+                    for(unsigned int n = 0; n < posGenJets.size(); ++n)
+                    {
+
+                        if(deltaR(posGenJets.at(n).eta, posGenJets.at(n).phi, Genconverter().IEta2Eta(l), Genconverter().IPhi2Phi(m)) < dR)
+                        {
+                            dR = deltaR(posGenJets.at(n).eta, posGenJets.at(n).phi, Genconverter().IEta2Eta(l), Genconverter().IPhi2Phi(m));
+                            passed = n;
+                        }
+                    }
+                    //    cout << "Best Match Pos Jet:";
+                    //    cout << dR << endl;
+                    if(dR < .5)
+                    {
+                        posGenJets.at(passed).matchPass = true;   //says that the gen jet at 'passed' is close enough to a trig jet
+                        HFarrayPos[l][m].match = true;
+                        HFarrayPos[l][m].genId = passed;
+                    }
+
+                }
+                if(HFarrayNeg[l][m].pass)
+                {
+                    dR = 100;
+                    passed = 0;
+                    HFarrayNeg[l][m].match = false;
+                    for(unsigned int n = 0; n < negGenJets.size(); ++n)
+                    {
+
+                        if(deltaR(negGenJets.at(n).eta, negGenJets.at(n).phi, Genconverter().IEta2Eta(-l), Genconverter().IPhi2Phi(m)) < dR)
+                        {
+                            dR = deltaR(negGenJets.at(n).eta, negGenJets.at(n).phi, Genconverter().IEta2Eta(-l), Genconverter().IPhi2Phi(m));
+                            passed = n;
+                        }
+                    }
+                    cout << "Best Match Neg Jet:";
+                    cout << dR << endl;
+                    if(dR < .5)
+                    {
+                        negGenJets.at(passed).matchPass = true;
+                        HFarrayNeg[l][m].match = true;
+                        HFarrayNeg[l][m].genId = passed;
+                    }
+                }
+            }
+        }
+
+
+
+        for(unsigned int i = 0; i < negGenJets.size(); ++i)  //loops over gen jets again
+        {
+            if(negGenJets.at(i).matchPass)  //checks for a gen jet which was a close delta R match
+            {
+                if(negGenJets.at(i).eta < -3.4 && negGenJets.at(i).eta > -4.4) //Apply some cuts on eta, eta, phi, etc before making filling the histo.  For now this justs keeps things deep within acceptance in eta. (to turn it off just set it all to true)
+                {
+                    EtMatched->Fill(negGenJets.at(i).Et);           
+                    EtaMatched->Fill(negGenJets.at(i).eta);
+                    PhiMatched->Fill(negGenJets.at(i).phi);
+                    absEtaMatched->Fill(fabs(negGenJets.at(i).eta));
+                    IPhiMatched->Fill(Genconverter().Phi2Iphi(negGenJets.at(i).phi, negGenJets.at(i).eta));
+                    //      cout << "Hi! EtaMatched should be getting:";
+                    //      cout << negGenJets.at(i).eta << endl;
+                } 
+            }
+        }    
+        for(unsigned int i = 0; i < posGenJets.size(); ++i)
+        {
+            if(posGenJets.at(i).matchPass)
+            {
+                if(posGenJets.at(i).eta < 4.4 && posGenJets.at(i).eta > 3.4)
+                {
+                    EtMatched->Fill(posGenJets.at(i).Et);
+                    EtaMatched->Fill(posGenJets.at(i).eta);
+                    PhiMatched->Fill(posGenJets.at(i).phi);
+                    absEtaMatched->Fill(fabs(posGenJets.at(i).eta));
+                    IPhiMatched->Fill(Genconverter().Phi2Iphi(posGenJets.at(i).phi, posGenJets.at(i).eta));
+                    //        cout << "Hi!" << endl;
+                }
+            }
+        }
+    }
     for(int q = 31; q < 40; q++)
     {
         for(int p = 1; p < 72; p+=2)
@@ -610,6 +737,16 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 trigJetEta->Fill(Genconverter().IEta2Eta(-q));
                 trigJetPhi->Fill(Genconverter().IPhi2Phi(p));
                 trigJetIPhi->Fill(p);
+                if(isData)
+                {
+                    trigJetSeedTotalR->Fill(HFarrayNeg[q][p].seedTotalR);
+                }
+                if(!isData && HFarrayNeg[q][p].match)
+                {
+                    trigJetSeedTotalR->Fill(HFarrayNeg[q][p].seedTotalR);
+                    matchedTrigJetEt->Fill(HFarrayNeg[q][p].jetEt);
+                    matchedGenTrigEtR->Fill(negGenJets.at(HFarrayNeg[q][p].genId).Et/HFarrayNeg[q][p].jetEt);
+                }
             }
             if(HFarrayPos[q][p].pass)
             {
@@ -617,141 +754,37 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 trigJetEta->Fill(Genconverter().IEta2Eta(q));
                 trigJetPhi->Fill(Genconverter().IPhi2Phi(p));
                 trigJetIPhi->Fill(p);
-            }
-        }
-    }
-if(!isData)
-{
-    for(unsigned int n = 0; n < pIn->size(); ++n)  //checks to see if any truth jets are in HF and fills genJets vectors
-    { 
-        if(pIn->at(n).eta() < -2.964 && pIn->at(n).eta() > -4.716 && pIn->at(n).et() > 10)
-        {
-            genJet aGenJet = genJet();
-            aGenJet.Et = pIn->at(n).et();
-            aGenJet.eta = pIn->at(n).eta();
-            aGenJet.phi = pIn->at(n).phi();
-            aGenJet.matchPass = false;
-            aGenJet.id = n;
-            negGenJets.push_back(aGenJet);
-        }
-        if(pIn->at(n).eta() > 2.964 && pIn->at(n).eta() < 4.716 && pIn->at(n).et() > 10)
-        {
-            genJet aGenJet = genJet();
-            aGenJet.Et = pIn->at(n).et();
-            aGenJet.eta = pIn->at(n).eta();
-            aGenJet.phi = pIn->at(n).phi();
-            aGenJet.matchPass = false;
-            aGenJet.id = n;
-            posGenJets.push_back(aGenJet);
-        }
-
-    }
-
-
-
-    for(int l = 31; l < 40; l++) //loops over ieta
-    {
-        for(int m = 1; m < 72; m+=2) //loops over iphi
-        {
-            if(HFarrayPos[l][m].pass)  //checks for a good reco jet which passes criteria enforced above
-            {
-
-                passed = 0; 
-                dR = 100;
-                for(unsigned int n = 0; n < posGenJets.size(); ++n)
+                if(isData)
                 {
-
-                    if(deltaR(posGenJets.at(n).eta, posGenJets.at(n).phi, Genconverter().IEta2Eta(l), Genconverter().IPhi2Phi(m)) < dR)
-                    {
-                        dR = deltaR(posGenJets.at(n).eta, posGenJets.at(n).phi, Genconverter().IEta2Eta(l), Genconverter().IPhi2Phi(m));
-                        passed = n;
-                    }
+                    trigJetSeedTotalR->Fill(HFarrayPos[q][p].seedTotalR);
                 }
-                //    cout << "Best Match Pos Jet:";
-                //    cout << dR << endl;
-                if(dR < 1)
+                if(!isData && HFarrayPos[q][p].match)
                 {
-                    posGenJets.at(passed).matchPass = true;   //says that the gen jet at 'passed' is close enough to a reco jet
-                }
-
-            }
-            if(HFarrayNeg[l][m].pass)
-            {
-
-
-
-                dR = 100;
-                passed = 0;
-                for(unsigned int n = 0; n < negGenJets.size(); ++n)
-                {
-
-                    if(deltaR(negGenJets.at(n).eta, negGenJets.at(n).phi, Genconverter().IEta2Eta(-l), Genconverter().IPhi2Phi(m)) < dR)
-                    {
-                        dR = deltaR(negGenJets.at(n).eta, negGenJets.at(n).phi, Genconverter().IEta2Eta(-l), Genconverter().IPhi2Phi(m));
-                        passed = n;
-                    }
-                }
-                cout << "Best Match Neg Jet:";
-                cout << dR << endl;
-                if(dR < .5)
-                {
-                    negGenJets.at(passed).matchPass = true;
+                    trigJetSeedTotalR->Fill(HFarrayPos[q][p].seedTotalR);
+                    matchedTrigJetEt->Fill(HFarrayPos[q][p].jetEt);
+                    matchedGenTrigEtR->Fill(posGenJets.at(HFarrayPos[q][p].genId).Et/HFarrayPos[q][p].jetEt);
                 }
             }
         }
     }
 
+    cout << "Number of negative and positive trigger jets so far:" << endl;
+    cout << trigNegJets << endl;
+    cout << trigPosJets << endl;
+    //         cout << genJetsNegHF << endl;
+    //         cout << genJetsPosHF << endl;
 
-
-    for(unsigned int i = 0; i < negGenJets.size(); ++i)  //loops over gen jets again
-    {
-        if(negGenJets.at(i).matchPass)  //checks for a gen jet which was a close delta R match
+    //A silly bit of code to check the deltaR algorithm
+    /*  int cand1 [16] = {1, 1, 1, 1, 2, 2, 2, 2, 72, 72, 72, 72, 71, 71, 71, 71};
+        int cand2 [16] = {1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71};
+        double delR [16];
+        double etaVal = 3.6;
+        for(unsigned int cand = 0; cand < 16; ++cand)
         {
-            if(negGenJets.at(i).eta < -3.4 && negGenJets.at(i).eta > -4.4) //Apply some cuts on eta, eta, phi, etc before making filling the histo.  For now this justs keeps things deep within acceptance in eta. (to turn it off just set it all to true)
-            {
-                EtMatched->Fill(negGenJets.at(i).Et);           
-                EtaMatched->Fill(negGenJets.at(i).eta);
-                PhiMatched->Fill(negGenJets.at(i).phi);
-                absEtaMatched->Fill(fabs(negGenJets.at(i).eta));
-                IPhiMatched->Fill(Genconverter().Phi2Iphi(negGenJets.at(i).phi, negGenJets.at(i).eta));
-                //      cout << "Hi! EtaMatched should be getting:";
-                //      cout << negGenJets.at(i).eta << endl;
-            } 
+        delR [cand] = deltaR(etaVal, Genconverter().IPhi2Phi(cand1[cand]), etaVal, Genconverter().IPhi2Phi(cand2[cand]));
+        std::cout << delR[cand] << std::endl;
         }
-    }    
-    for(unsigned int i = 0; i < posGenJets.size(); ++i)
-    {
-        if(posGenJets.at(i).matchPass)
-        {
-            if(posGenJets.at(i).eta < 4.4 && posGenJets.at(i).eta > 3.4)
-            {
-                EtMatched->Fill(posGenJets.at(i).Et);
-                EtaMatched->Fill(posGenJets.at(i).eta);
-                PhiMatched->Fill(posGenJets.at(i).phi);
-                absEtaMatched->Fill(fabs(posGenJets.at(i).eta));
-                IPhiMatched->Fill(Genconverter().Phi2Iphi(posGenJets.at(i).phi, posGenJets.at(i).eta));
-                //        cout << "Hi!" << endl;
-            }
-        }
-    }
-}
-cout << "Number of negative and positive trigger jets so far:" << endl;
-cout << trigNegJets << endl;
-cout << trigPosJets << endl;
-//         cout << genJetsNegHF << endl;
-//         cout << genJetsPosHF << endl;
-
-//A silly bit of code to check the deltaR algorithm
-/*  int cand1 [16] = {1, 1, 1, 1, 2, 2, 2, 2, 72, 72, 72, 72, 71, 71, 71, 71};
-    int cand2 [16] = {1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71, 1, 2, 72, 71};
-    double delR [16];
-    double etaVal = 3.6;
-    for(unsigned int cand = 0; cand < 16; ++cand)
-    {
-    delR [cand] = deltaR(etaVal, Genconverter().IPhi2Phi(cand1[cand]), etaVal, Genconverter().IPhi2Phi(cand2[cand]));
-    std::cout << delR[cand] << std::endl;
-    }
-    */
+        */
 }
 void
 JetAlgorithm::beginJob() { }
