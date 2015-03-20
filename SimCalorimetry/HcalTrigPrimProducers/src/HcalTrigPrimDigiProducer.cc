@@ -23,95 +23,99 @@
 #include <algorithm>
 
 HcalTrigPrimDigiProducer::HcalTrigPrimDigiProducer(const edm::ParameterSet& ps)
-: 
-  theAlgo_(ps.getParameter<bool>("peakFilter"),
-	  ps.getParameter<std::vector<double> >("weights"),
-	  ps.getParameter<int>("latency"),
-	  ps.getParameter<uint32_t>("FG_threshold"),
-      ps.getParameter<uint32_t>("ZS_threshold"),
-	  ps.getParameter<int>("numberOfSamples"),
-	  ps.getParameter<int>("numberOfPresamples"),
-      ps.getParameter<uint32_t>("MinSignalThreshold"),
-      ps.getParameter<uint32_t>("PMTNoiseThreshold")
-   ),
-  inputLabel_(ps.getParameter<std::vector<edm::InputTag> >("inputLabel")),
-  inputTagFEDRaw_(ps.getParameter<edm::InputTag> ("InputTagFEDRaw")),
-  runZS_(ps.getParameter<bool>("RunZS")),
-  runFrontEndFormatError_(ps.getParameter<bool>("FrontEndFormatError"))
-{
+    :
+    theAlgo_(ps.getParameter<bool>("peakFilter"),
+            ps.getParameter<std::vector<double> >("weights"),
+            ps.getParameter<int>("latency"),
+            ps.getParameter<uint32_t>("FG_threshold"),
+            ps.getParameter<uint32_t>("ZS_threshold"),
+            ps.getParameter<int>("numberOfSamples"),
+            ps.getParameter<int>("numberOfPresamples"),
+            ps.getParameter<uint32_t>("MinSignalThreshold"),
+            ps.getParameter<uint32_t>("PMTNoiseThreshold")
+           ),
+    inputLabel_(ps.getParameter<std::vector<edm::InputTag> >("inputLabel")),
+    inputTagFEDRaw_(ps.getParameter<edm::InputTag> ("InputTagFEDRaw")),
+    runZS_(ps.getParameter<bool>("RunZS")),
+    runFrontEndFormatError_(ps.getParameter<bool>("FrontEndFormatError")) {
     HFEMB_ = false;
-    if(ps.exists("LSConfig"))
-    {
+    if (ps.exists("LSConfig")) {
         LongShortCut_ = ps.getUntrackedParameter<edm::ParameterSet>("LSConfig");
         HFEMB_ = LongShortCut_.getParameter<bool>("HcalFeatureHFEMBit");
-        MinLongEnergy_ = LongShortCut_.getParameter<double>("Min_Long_Energy"); //minimum long energy
-        MinShortEnergy_ = LongShortCut_.getParameter<double>("Min_Short_Energy"); //minimum short energy
-        LongShortSlope_ = LongShortCut_.getParameter<double>("Long_vrs_Short_Slope"); //slope of the line that cuts are based on
-        LongShortOffset_ = LongShortCut_.getParameter<double>("Long_Short_Offset"); //offset of line
+        MinLongEnergy_ =
+            LongShortCut_.getParameter<double>("Min_Long_Energy"); //minimum long energy
+        MinShortEnergy_ =
+            LongShortCut_.getParameter<double>("Min_Short_Energy"); //minimum short energy
+        LongShortSlope_ =
+            LongShortCut_.getParameter<double>("Long_vrs_Short_Slope"); //slope of the line that cuts are based on
+        LongShortOffset_ =
+            LongShortCut_.getParameter<double>("Long_Short_Offset"); //offset of line
     }
-  // register for data access
-  tok_raw_ = consumes<FEDRawDataCollection>(inputTagFEDRaw_);
-  tok_hbhe_ = consumes<HBHEDigiCollection>(inputLabel_[0]);
-  tok_hf_ = consumes<HFDigiCollection>(inputLabel_[1]);
+    // register for data access
+    tok_raw_ = consumes<FEDRawDataCollection>(inputTagFEDRaw_);
+    tok_hbhe_ = consumes<HBHEDigiCollection>(inputLabel_[0]);
+    tok_hf_ = consumes<HFDigiCollection>(inputLabel_[1]);
 
-   produces<HcalTrigPrimDigiCollection>();
-   theAlgo_.setPeakFinderAlgorithm(ps.getParameter<int>("PeakFinderAlgorithm"));
+    produces<HcalTrigPrimDigiCollection>();
+    theAlgo_.setPeakFinderAlgorithm(ps.getParameter<int>("PeakFinderAlgorithm"));
 }
 
 
-void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup& eventSetup) {
+void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent,
+                                       const edm::EventSetup& eventSetup) {
 
-  // Step A: get the conditions, for the decoding
-  edm::ESHandle<HcalTPGCoder> inputCoder;
-  eventSetup.get<HcalTPGRecord>().get(inputCoder);
+    // Step A: get the conditions, for the decoding
+    edm::ESHandle<HcalTPGCoder> inputCoder;
+    eventSetup.get<HcalTPGRecord>().get(inputCoder);
 
-  edm::ESHandle<CaloTPGTranscoder> outTranscoder;
-  eventSetup.get<CaloTPGRecord>().get(outTranscoder);
+    edm::ESHandle<CaloTPGTranscoder> outTranscoder;
+    eventSetup.get<CaloTPGRecord>().get(outTranscoder);
 
-  edm::ESHandle<HcalLutMetadata> lutMetadata;
-  eventSetup.get<HcalLutMetadataRcd>().get(lutMetadata);
-  float rctlsb = lutMetadata->getRctLsb();
+    edm::ESHandle<HcalLutMetadata> lutMetadata;
+    eventSetup.get<HcalLutMetadataRcd>().get(lutMetadata);
+    float rctlsb = lutMetadata->getRctLsb();
 
-  edm::ESHandle<HcalTrigTowerGeometry> pG;
-  eventSetup.get<CaloGeometryRecord>().get(pG);
-  
-  // Step B: Create empty output
-  std::auto_ptr<HcalTrigPrimDigiCollection> result(new HcalTrigPrimDigiCollection());
+    edm::ESHandle<HcalTrigTowerGeometry> pG;
+    eventSetup.get<CaloGeometryRecord>().get(pG);
 
-  edm::Handle<HBHEDigiCollection> hbheDigis;
-  edm::Handle<HFDigiCollection>   hfDigis;
+    // Step B: Create empty output
+    std::auto_ptr<HcalTrigPrimDigiCollection> result(new
+                                                     HcalTrigPrimDigiCollection());
 
-  iEvent.getByToken(tok_hbhe_,hbheDigis);
-  iEvent.getByToken(tok_hf_,hfDigis);
+    edm::Handle<HBHEDigiCollection> hbheDigis;
+    edm::Handle<HFDigiCollection>   hfDigis;
 
-  // protect here against missing input collections
-  // there is no protection in HcalTriggerPrimitiveAlgo
+    iEvent.getByToken(tok_hbhe_, hbheDigis);
+    iEvent.getByToken(tok_hf_, hfDigis);
 
-  if (!hbheDigis.isValid()) {
-      edm::LogInfo("HcalTrigPrimDigiProducer")
-              << "\nWarning: HBHEDigiCollection with input tag "
-              << inputLabel_[0]
-              << "\nrequested in configuration, but not found in the event."
-              << "\nQuit returning empty product." << std::endl;
+    // protect here against missing input collections
+    // there is no protection in HcalTriggerPrimitiveAlgo
 
-      // put empty HcalTrigPrimDigiCollection in the event
-      iEvent.put(result);
+    if (!hbheDigis.isValid()) {
+        edm::LogInfo("HcalTrigPrimDigiProducer")
+                << "\nWarning: HBHEDigiCollection with input tag "
+                << inputLabel_[0]
+                << "\nrequested in configuration, but not found in the event."
+                << "\nQuit returning empty product." << std::endl;
 
-      return;
-  }
+        // put empty HcalTrigPrimDigiCollection in the event
+        iEvent.put(result);
 
-  if (!hfDigis.isValid()) {
-      edm::LogInfo("HcalTrigPrimDigiProducer")
-              << "\nWarning: HFDigiCollection with input tag "
-              << inputLabel_[1]
-              << "\nrequested in configuration, but not found in the event."
-              << "\nQuit returning empty product." << std::endl;
+        return;
+    }
 
-      // put empty HcalTrigPrimDigiCollection in the event
-      iEvent.put(result);
+    if (!hfDigis.isValid()) {
+        edm::LogInfo("HcalTrigPrimDigiProducer")
+                << "\nWarning: HFDigiCollection with input tag "
+                << inputLabel_[1]
+                << "\nrequested in configuration, but not found in the event."
+                << "\nQuit returning empty product." << std::endl;
 
-      return;
-  }
+        // put empty HcalTrigPrimDigiCollection in the event
+        iEvent.put(result);
+
+        return;
+    }
 
 
     edm::ESHandle < HcalDbService > pSetup;
@@ -120,30 +124,31 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
     HcalFeatureBit* hfembit = 0;
 
     // Step C: Invoke the algorithm, passing in inputs and getting back outputs.
-    if(HFEMB_)
-    {
-        hfembit = new HcalFeatureHFEMBit(MinShortEnergy_, MinLongEnergy_, LongShortSlope_, LongShortOffset_, *pSetup); //inputs values that cut will be based on
+    if (HFEMB_) {
+        hfembit = new HcalFeatureHFEMBit(MinShortEnergy_, MinLongEnergy_,
+                                         LongShortSlope_, LongShortOffset_,
+                                         *pSetup); //inputs values that cut will be based on
         theAlgo_.run(inputCoder.product(), outTranscoder->getHcalCompressor().get(),
-                *hbheDigis, *hfDigis, *result, &(*pG), rctlsb, hfembit);
+                     *hbheDigis, *hfDigis, *result, &(*pG), rctlsb, hfembit);
 
     }
-    else
-    {
+    else {
         theAlgo_.run(inputCoder.product(), outTranscoder->getHcalCompressor().get(),
-                *hbheDigis, *hfDigis, *result, &(*pG), rctlsb);
+                     *hbheDigis, *hfDigis, *result, &(*pG), rctlsb);
     }
 
-  // Step C.1: Run FE Format Error / ZS for real data.
-  if (runFrontEndFormatError_) {
+    // Step C.1: Run FE Format Error / ZS for real data.
+    if (runFrontEndFormatError_) {
 
-        const HcalElectronicsMap *emap = pSetup->getHcalMapping();
+        const HcalElectronicsMap* emap = pSetup->getHcalMapping();
 
         edm::Handle < FEDRawDataCollection > fedHandle;
         iEvent.getByToken(tok_raw_, fedHandle);
 
         if (fedHandle.isValid() && emap != 0) {
             theAlgo_.runFEFormatError(fedHandle.product(), emap, *result);
-        } else {
+        }
+        else {
             edm::LogInfo("HcalTrigPrimDigiProducer")
                     << "\nWarning: FEDRawDataCollection with input tag "
                     << inputTagFEDRaw_
@@ -152,21 +157,23 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
             // produce empty HcalTrigPrimDigiCollection and put it in the event
             std::auto_ptr < HcalTrigPrimDigiCollection > emptyResult(
-                    new HcalTrigPrimDigiCollection());
+                new HcalTrigPrimDigiCollection());
 
             iEvent.put(emptyResult);
 
             return;
         }
 
-  }
+    }
 
-  if (runZS_) theAlgo_.runZS(*result);
+    if (runZS_) {
+        theAlgo_.runZS(*result);
+    }
 
-  //  edm::LogInfo("HcalTrigPrimDigiProducer") << "HcalTrigPrims: " << result->size();
+    //  edm::LogInfo("HcalTrigPrimDigiProducer") << "HcalTrigPrims: " << result->size();
 
-  // Step D: Put outputs into event
-  iEvent.put(result);
+    // Step D: Put outputs into event
+    iEvent.put(result);
 }
 
 

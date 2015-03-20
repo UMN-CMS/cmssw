@@ -8,21 +8,20 @@
 # include "Geometry/HcalTowerAlgo/interface/HcalTrigTowerGeometry.h"
 
 namespace edm {
-  class ConfigurationDescriptions;
+    class ConfigurationDescriptions;
 }
 
-class HcalTrigTowerGeometryESProducer : public edm::ESProducer
-{
-public:
-  HcalTrigTowerGeometryESProducer( const edm::ParameterSet & conf );
-  virtual ~HcalTrigTowerGeometryESProducer( void );
+class HcalTrigTowerGeometryESProducer : public edm::ESProducer {
+    public:
+        HcalTrigTowerGeometryESProducer(const edm::ParameterSet& conf);
+        virtual ~HcalTrigTowerGeometryESProducer(void);
 
-  boost::shared_ptr<HcalTrigTowerGeometry> produce( const CaloGeometryRecord & );
+        boost::shared_ptr<HcalTrigTowerGeometry> produce(const CaloGeometryRecord&);
 
-  static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
+        static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-private:
-  boost::shared_ptr<HcalTrigTowerGeometry> m_hcalTrigTowerGeom;
+    private:
+        boost::shared_ptr<HcalTrigTowerGeometry> m_hcalTrigTowerGeom;
 };
 
 #endif // HCAL_TOWER_ALGO_HCAL_TRIG_TOWER_GEOMETRY_ES_PRODUCER_H

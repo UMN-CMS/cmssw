@@ -39,19 +39,19 @@ using std::ofstream;
 //
 // constructors and destructor
 //
-L1CaloInputScalesGenerator::L1CaloInputScalesGenerator(const edm::ParameterSet& iConfig)
+L1CaloInputScalesGenerator::L1CaloInputScalesGenerator(const edm::ParameterSet&
+                                                       iConfig)
 
 {
-   //now do what ever initialization is needed
+    //now do what ever initialization is needed
 
 }
 
 
-L1CaloInputScalesGenerator::~L1CaloInputScalesGenerator()
-{
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
+L1CaloInputScalesGenerator::~L1CaloInputScalesGenerator() {
+
+    // do anything here that needs to be done at desctruction time
+    // (e.g. close files, deallocate resources etc.)
 
 }
 
@@ -62,183 +62,164 @@ L1CaloInputScalesGenerator::~L1CaloInputScalesGenerator()
 
 // ------------ method called to for each event  ------------
 void
-L1CaloInputScalesGenerator::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
-   using namespace edm;
+L1CaloInputScalesGenerator::analyze(const edm::Event& iEvent,
+                                    const edm::EventSetup& iSetup) {
+    using namespace edm;
 
 
-   ESHandle<CaloTPGTranscoder> caloTPGTranscoder;
-   iSetup.get<CaloTPGRecord>().get(caloTPGTranscoder);
-   
-   EcalTPGScale* ecalTPGScale = new EcalTPGScale();
-   ecalTPGScale->setEventSetup(iSetup);
+    ESHandle<CaloTPGTranscoder> caloTPGTranscoder;
+    iSetup.get<CaloTPGRecord>().get(caloTPGTranscoder);
 
-   double output; 
-   ofstream scalesFile("L1CaloInputScales_cfi.py");
+    EcalTPGScale* ecalTPGScale = new EcalTPGScale();
+    ecalTPGScale->setEventSetup(iSetup);
 
-
-   // Write the ecal scales, positive eta
-
-   scalesFile << "import FWCore.ParameterSet.Config as cms\n" <<endl;
-
-   scalesFile << "L1CaloInputScalesProducer =cms.ESProducer(\"L1CaloInputScalesProducer\"," << endl;
-   scalesFile << "L1EcalEtThresholdsPositiveEta = cms.vdouble(" << endl; 
+    double output;
+    ofstream scalesFile("L1CaloInputScales_cfi.py");
 
 
-   //Python does not support arrays over 255 entries so we neeed ton accomodate it by creating new array after 255 entries
-   int nEntries = 0;
+    // Write the ecal scales, positive eta
+
+    scalesFile << "import FWCore.ParameterSet.Config as cms\n" << endl;
+
+    scalesFile <<
+               "L1CaloInputScalesProducer =cms.ESProducer(\"L1CaloInputScalesProducer\"," <<
+               endl;
+    scalesFile << "L1EcalEtThresholdsPositiveEta = cms.vdouble(" << endl;
 
 
-
-   // loop over ietas, barrel
-   for (unsigned short absIeta = 1; absIeta <= 28; absIeta++)
-     {
-       EcalSubdetector subdet = ( absIeta <= 17 ) ? EcalBarrel : EcalEndcap ;
-       // 8 bits of input energy
-       for (unsigned short input = 0; input <= 0xFF; input++)
-	 {
-	   output = ecalTPGScale->getTPGInGeV( (unsigned int) input, 
-					      EcalTrigTowerDetId(1, subdet,
-								 absIeta, 1));
-	   scalesFile << setprecision (8) << output;
-	   nEntries++;
-
-	   if (absIeta == 28 && input == 0xFF)
-	     {
-	       scalesFile << "),";
-	     }
-	   else if(nEntries>254)
-	     {
-	       scalesFile <<")+cms.vdouble(";
-	       nEntries=0;
-	     }
-	   else
-	     {
-	       scalesFile << ", ";
-	     }
-	 }
-       scalesFile << endl;
-     }
-
-   // Write the ecal scales, negative eta
-
-   scalesFile << endl << "\tL1EcalEtThresholdsNegativeEta = cms.vdouble(" << endl;
-
-   nEntries=0;
-   // loop over ietas, barrel first
-   for (unsigned short absIeta = 1; absIeta <= 28; absIeta++)
-     {
-       EcalSubdetector subdet = ( absIeta <= 17 ) ? EcalBarrel : EcalEndcap ;
-       // 8 bits of input energy
-       for (unsigned short input = 0; input <= 0xFF; input++)
-	 {
-	   // negative eta
-	   output = ecalTPGScale->
-	     getTPGInGeV( (unsigned int) input, EcalTrigTowerDetId(-1, subdet,
-							   absIeta, 2));
-	   scalesFile << setprecision (8) << output;
-	   nEntries++;
+    //Python does not support arrays over 255 entries so we neeed ton accomodate it by creating new array after 255 entries
+    int nEntries = 0;
 
 
 
-	   if (absIeta == 28 && input == 0xFF)
-	     {
-	       scalesFile << "),";
-	     }
-	   else if(nEntries>254)
-	     {
-	       scalesFile <<")+cms.vdouble(";
-	       nEntries=0;
-	     }
-	   else
-	     {
-	       scalesFile << ", ";
-	     }
-	 }
-       scalesFile << endl;
-     }
+    // loop over ietas, barrel
+    for (unsigned short absIeta = 1; absIeta <= 28; absIeta++) {
+        EcalSubdetector subdet = (absIeta <= 17) ? EcalBarrel : EcalEndcap ;
+        // 8 bits of input energy
+        for (unsigned short input = 0; input <= 0xFF; input++) {
+            output = ecalTPGScale->getTPGInGeV((unsigned int) input,
+                                               EcalTrigTowerDetId(1, subdet,
+                                                                  absIeta, 1));
+            scalesFile << setprecision(8) << output;
+            nEntries++;
 
-   // Write the hcal scales (Positive Eta)
+            if (absIeta == 28 && input == 0xFF) {
+                scalesFile << "),";
+            }
+            else if (nEntries > 254) {
+                scalesFile << ")+cms.vdouble(";
+                nEntries = 0;
+            }
+            else {
+                scalesFile << ", ";
+            }
+        }
+        scalesFile << endl;
+    }
 
-     scalesFile << endl << "\tL1HcalEtThresholdsPositiveEta = cms.vdouble(" << endl;
+    // Write the ecal scales, negative eta
 
-   // loop over ietas
-   edm::ESHandle<HcalTrigTowerGeometry> theTrigTowerGeometry;
-   iSetup.get<CaloGeometryRecord>().get(theTrigTowerGeometry);
-     nEntries=0;
-   for (unsigned short absIeta = 1; absIeta <= 32; absIeta++)
-     {
-       for (unsigned short input = 0; input <= 0xFF; input++)
-	 {
-	   output = caloTPGTranscoder->hcaletValue(absIeta, input, *theTrigTowerGeometry); 
-	   scalesFile << setprecision (8) << output ;
-	   nEntries++;
+    scalesFile << endl << "\tL1EcalEtThresholdsNegativeEta = cms.vdouble(" << endl;
 
-
-	   if (absIeta == 32 && input == 0xFF)
-	     {
-	       scalesFile << "),";
-	     }
-	   else if(nEntries>254)
-	     {
-	       scalesFile <<")+cms.vdouble(";
-	       nEntries=0;
-	     }
-	   else
-	     {
-	       scalesFile << ", ";
-	     }
-	 }
-       scalesFile << endl;
-     }
-
-   // Write the hcal scales (Negative Eta)
-
-     scalesFile << endl << "\tL1HcalEtThresholdsNegativeEta = cms.vdouble(" << endl;
-
-     nEntries=0;  
-   // loop over ietas
-   for (unsigned short absIeta = 1; absIeta <= 32; absIeta++)
-     {
-       for (unsigned short input = 0; input <= 0xFF; input++)
-	 {
-	   output = caloTPGTranscoder->hcaletValue(-absIeta, input, *theTrigTowerGeometry); 
-	   scalesFile << setprecision (8) << output ;
-	   nEntries++;
+    nEntries = 0;
+    // loop over ietas, barrel first
+    for (unsigned short absIeta = 1; absIeta <= 28; absIeta++) {
+        EcalSubdetector subdet = (absIeta <= 17) ? EcalBarrel : EcalEndcap ;
+        // 8 bits of input energy
+        for (unsigned short input = 0; input <= 0xFF; input++) {
+            // negative eta
+            output = ecalTPGScale->
+                     getTPGInGeV((unsigned int) input, EcalTrigTowerDetId(-1, subdet,
+                                                                          absIeta, 2));
+            scalesFile << setprecision(8) << output;
+            nEntries++;
 
 
-	   if (absIeta == 32 && input == 0xFF)
-	     {
-	       scalesFile << ")";
-	     }
-	   else if(nEntries>254)
-	     {
-	       scalesFile <<")+cms.vdouble(";
-	       nEntries=0;
-	     }
-	   else 
-	     {
-	       scalesFile << ", ";
-	     }
-	 }
-       scalesFile << endl;
-     }
+
+            if (absIeta == 28 && input == 0xFF) {
+                scalesFile << "),";
+            }
+            else if (nEntries > 254) {
+                scalesFile << ")+cms.vdouble(";
+                nEntries = 0;
+            }
+            else {
+                scalesFile << ", ";
+            }
+        }
+        scalesFile << endl;
+    }
+
+    // Write the hcal scales (Positive Eta)
+
+    scalesFile << endl << "\tL1HcalEtThresholdsPositiveEta = cms.vdouble(" << endl;
+
+    // loop over ietas
+    edm::ESHandle<HcalTrigTowerGeometry> theTrigTowerGeometry;
+    iSetup.get<CaloGeometryRecord>().get(theTrigTowerGeometry);
+    nEntries = 0;
+    for (unsigned short absIeta = 1; absIeta <= 32; absIeta++) {
+        for (unsigned short input = 0; input <= 0xFF; input++) {
+            output = caloTPGTranscoder->hcaletValue(absIeta, input, *theTrigTowerGeometry);
+            scalesFile << setprecision(8) << output ;
+            nEntries++;
 
 
-   scalesFile << ")" << endl;
+            if (absIeta == 32 && input == 0xFF) {
+                scalesFile << "),";
+            }
+            else if (nEntries > 254) {
+                scalesFile << ")+cms.vdouble(";
+                nEntries = 0;
+            }
+            else {
+                scalesFile << ", ";
+            }
+        }
+        scalesFile << endl;
+    }
 
-   scalesFile.close();
+    // Write the hcal scales (Negative Eta)
+
+    scalesFile << endl << "\tL1HcalEtThresholdsNegativeEta = cms.vdouble(" << endl;
+
+    nEntries = 0;
+    // loop over ietas
+    for (unsigned short absIeta = 1; absIeta <= 32; absIeta++) {
+        for (unsigned short input = 0; input <= 0xFF; input++) {
+            output = caloTPGTranscoder->hcaletValue(-absIeta, input, *theTrigTowerGeometry);
+            scalesFile << setprecision(8) << output ;
+            nEntries++;
+
+
+            if (absIeta == 32 && input == 0xFF) {
+                scalesFile << ")";
+            }
+            else if (nEntries > 254) {
+                scalesFile << ")+cms.vdouble(";
+                nEntries = 0;
+            }
+            else {
+                scalesFile << ", ";
+            }
+        }
+        scalesFile << endl;
+    }
+
+
+    scalesFile << ")" << endl;
+
+    scalesFile.close();
 }
 
 
 // ------------ method called once each job just before starting event loop  ------------
-void 
-L1CaloInputScalesGenerator::beginJob()
-{
+void
+L1CaloInputScalesGenerator::beginJob() {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void 
+void
 L1CaloInputScalesGenerator::endJob() {
 }
 

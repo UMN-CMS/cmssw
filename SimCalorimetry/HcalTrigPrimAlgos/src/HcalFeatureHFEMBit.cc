@@ -11,7 +11,8 @@ HcalFeatureHFEMBit::HcalFeatureHFEMBit(double ShortMinE, double LongMinE,
                                        const HcalDbService& conditions) : conditions_(conditions) {
     ShortMinE_ = ShortMinE; //minimum energy deposited
     LongMinE_ = LongMinE;
-    ShortLongCutSlope_ = ShortLongCutSlope; // this is a the slope of the cut line related to energy deposited in short fibers vrs long fibers
+    ShortLongCutSlope_ =
+        ShortLongCutSlope; // this is a the slope of the cut line related to energy deposited in short fibers vrs long fibers
     ShortLongCutOffset_ = ShortLongCutOffset; // this is the offset of said line.
 
 
@@ -30,7 +31,8 @@ bool HcalFeatureHFEMBit::fineGrainbit(int ADCShort, HcalDetId Sid, int CapIdS,
     HcalQIESample sQIESample(ADCShort, CapIdS, 1, 1);
     //makes a QIE sample for the short fiber.
     HFDataFrame shortf(Sid);
-    shortf.setSize(1); //not planning on there being anything else here at this point in time so setting the size to 1 shouldn't matter
+    shortf.setSize(
+        1); //not planning on there being anything else here at this point in time so setting the size to 1 shouldn't matter
     shortf.setSample(0, sQIESample); //inputs data into digi.
     const HcalCalibrations& calibrations = conditions_.getHcalCalibrations(Sid);
     const HcalQIECoder* channelCoderS = conditions_.getHcalCoder(Sid);
@@ -40,7 +42,8 @@ bool HcalFeatureHFEMBit::fineGrainbit(int ADCShort, HcalDetId Sid, int CapIdS,
 
     CaloSamples tools;
     coders.adc2fC(shortf, tools);
-    ShortE = (tools[0] - calibrations.pedestal(CapIdS)) * calibrations.respcorrgain(CapIdS);
+    ShortE = (tools[0] - calibrations.pedestal(CapIdS)) * calibrations.respcorrgain(
+                 CapIdS);
 
     HcalQIESample lQIESample(ADCLong, CapIdL, 1, 1);
     HFDataFrame longf(Lid);
@@ -56,7 +59,8 @@ bool HcalFeatureHFEMBit::fineGrainbit(int ADCShort, HcalDetId Sid, int CapIdS,
     HcalCoderDb coderL(*channelCoderL, *shapeL);
 
     coderL.adc2fC(longf, tool_l); // this fills tool_l[0] with linearized adc
-    LongE = (tool_l[0] - calibrationL.pedestal(CapIdL)) * calibrationL.respcorrgain(CapIdL);
+    LongE = (tool_l[0] - calibrationL.pedestal(CapIdL)) * calibrationL.respcorrgain(
+                CapIdL);
 
 
     // this actually does the cut
