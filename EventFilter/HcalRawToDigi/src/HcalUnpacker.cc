@@ -619,6 +619,7 @@ void HcalUnpacker::unpackUTCA(const FEDRawData& raw, const HcalElectronicsMap& e
       else if (i.flavor()==0x5) { // Old-style digis
 	int ifiber=((i.channelid()>>2)&0x1F);
 	int ichan=(i.channelid()&0x3);
+	bool mp=(i.channelid()&0x80)!=0);
 	HcalElectronicsId eid(crate,slot,ifiber,ichan, false);
 	DetId did=emap.lookup(eid);
 	
@@ -632,14 +633,17 @@ void HcalUnpacker::unpackUTCA(const FEDRawData& raw, const HcalElectronicsMap& e
 	    case (HcalEndcap): {
 	      colls.hbheCont->push_back(HBHEDataFrame(HcalDetId(did)));
 	      HcalUnpacker_impl::unpack_compact<HBHEDataFrame>(i, iend, colls.hbheCont->back(), nps, eid, startSample_, endSample_);
+	      hbheCont->back().setZSInfo(false,mp);
 	    } break;
 	    case (HcalOuter): {
 	      colls.hoCont->push_back(HODataFrame(HcalDetId(did)));
 	      HcalUnpacker_impl::unpack_compact<HODataFrame>(i, iend, colls.hoCont->back(), nps, eid, startSample_, endSample_);
+	      hoCont->back().setZSInfo(false,mp);
 	    } break;
 	    case (HcalForward): {
 	      colls.hfCont->push_back(HFDataFrame(HcalDetId(did)));
 	      HcalUnpacker_impl::unpack_compact<HFDataFrame>(i, iend, colls.hfCont->back(), nps, eid, startSample_, endSample_);
+	      hfCont->back().setZSInfo(false,mp);
 	    } break;
 	    case (HcalOther) : {
 	      HcalOtherDetId odid(did);
