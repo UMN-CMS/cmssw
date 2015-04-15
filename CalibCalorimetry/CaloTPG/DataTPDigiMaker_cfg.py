@@ -57,9 +57,21 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 if(isData):
       TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/085550A9-3EDC-E111-AA7F-5404A63886BE.root',
-      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/E035CA45-6ADC-E111-AF21-BCAEC518FF6B.root', 
       'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/08E28448-79DC-E111-9F48-5404A63886C5.root', 
-      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root']
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/18B86D77-5DDC-E111-B6AA-5404A63886EF.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/00484FFF-4EDC-E111-8A8F-0025901D629C.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/1AB266F2-56DC-E111-BBCD-0025901D631E.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/1AE9FEE6-2EDC-E111-82E9-E0CB4E55365D.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/1EFD93DA-33DC-E111-AADC-BCAEC532971B.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/20AC7ED2-3BDC-E111-BD44-BCAEC518FF8A.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/20BA83FE-38DC-E111-A63A-5404A63886C5.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/30FE52F7-44DC-E111-9487-BCAEC518FF50.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/326EA6E8-4CDC-E111-8C2F-5404A63886B9.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/00484FFF-4EDC-E111-8A8F-0025901D629C.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/340603FF-49DC-E111-8283-BCAEC5364C62.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/36A64EDB-5CDC-E111-99C7-001D09F29619.root',
+      'file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/200/091/40747533-33DC-E111-A167-003048D373AE.root'
+      ]
       #TempFN=['file:/hdfs/cms/phedex/store/data/Run2012C/MinimumBias/RAW/v1/000/201/278/02E206EC-31EB-E111-B28B-0025901D625A.root']
               
       
