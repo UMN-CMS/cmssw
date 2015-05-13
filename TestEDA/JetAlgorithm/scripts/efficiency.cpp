@@ -9,8 +9,8 @@
 
 int efficiency()
 {
-    std::string inFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/MCJets.root";
-    std::string outFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/eff.root";
+    std::string inFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/MCJetswFlatMinPUSUB5GeVSeed.root";
+    std::string outFile = "/home/aevans/CMS/CMSSW_7_1_0_pre5/src/TestEDA/JetAlgorithm/plugins/effwFlatMinPUSUB5GeVSeed.root";
 
     TFile* inTfile = new TFile(inFile.c_str());
 

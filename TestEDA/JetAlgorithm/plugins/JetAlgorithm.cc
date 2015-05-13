@@ -103,8 +103,10 @@ class JetAlgorithm : public edm::EDAnalyzer
             float matchPhi;
             int genId;
             float seedTotalR;
-            std::vector<unsigned int> oldGenIds;
-            bool isLoser;
+            std::vector<unsigned int> oldGenIds;   //not implemented
+            bool isLoser;                          //not implemented 
+            bool isFlat;                           //whether or not there are any equal height peaks inside the jet size
+            bool coPeaks [3][3];                   //where the co-peaks are (coPeak[1][1] is the jet itself)
         };
         struct genJet
         {
@@ -241,6 +243,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double genJetThreshold = 10;   
     bool pileUpSubtracting = true; //true means pile up Et subtraction will be done 
     bool splitPU = true;           //true means pile up is averaged in negative and postive HF separately (still goes in the same histo)
+    bool coPeaks = true;          //true means the algorithm includes coPeaks and attempts to resolve degeneracy by highest jet Et
 
     double totalPosHFEt = 0;
     double totalNegHFEt = 0;
@@ -518,9 +521,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         EtArrayNeg [i+1][left] + EtArrayNeg [i+1][j] + EtArrayNeg [i+1][right];
 
                     //checks that the seed is greater than the periphery
-                    if(EtArrayNeg [i][j] > EtArrayNeg [i-1][left] && EtArrayNeg [i][j] > EtArrayNeg [i-1][j]   && EtArrayNeg [i][j] > EtArrayNeg [i-1][right] &&
-                            EtArrayNeg [i][j] > EtArrayNeg [i][left]                                                && EtArrayNeg [i][j] > EtArrayNeg [i][right]   &&
-                            EtArrayNeg [i][j] > EtArrayNeg [i+1][left] && EtArrayNeg [i][j] > EtArrayNeg [i+1][j]   && EtArrayNeg [i][j] > EtArrayNeg [i+1][right] 
+                    if(EtArrayNeg [i][j] >= EtArrayNeg [i-1][left] && EtArrayNeg [i][j] >= EtArrayNeg [i-1][j]   && EtArrayNeg [i][j] >= EtArrayNeg [i-1][right] &&
+                            EtArrayNeg [i][j] >= EtArrayNeg [i][left]                                                && EtArrayNeg [i][j] >= EtArrayNeg [i][right]   &&
+                            EtArrayNeg [i][j] >= EtArrayNeg [i+1][left] && EtArrayNeg [i][j] >= EtArrayNeg [i+1][j]   && EtArrayNeg [i][j] >= EtArrayNeg [i+1][right] 
                             && NegJets [i][j] > jetThreshold) //total energy threshold
                     {
                         cout << "Made Trigger Jet in NegHF" << endl;
@@ -531,11 +534,55 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         HFarrayNeg[i][j].seedEt = EtArrayNeg [i][j];
                         HFarrayNeg[i][j].seedTotalR = EtArrayNeg[i][j]/NegJets[i][j];
                         HFarrayNeg[i][j].pass = true; //initial true setting for whether it is a good jet
+                        HFarrayNeg[i][j].isFlat = false;  //initial assumption
                         if(HFarrayNeg[i][j].jetEt < 0)
                         {
                             cout << "hi";
                         }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i][left])
+                        {
+                            HFarrayNeg[i][j].coPeaks[1][0] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i][right])
+                        {
+                            HFarrayNeg[i][j].coPeaks[1][2] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i-1][left])
+                        {
+                            HFarrayNeg[i][j].coPeaks[0][0] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i-1][j])
+                        {
+                            HFarrayNeg[i][j].coPeaks[0][1] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i-1][right])
+                        {
+                            HFarrayNeg[i][j].coPeaks[0][2] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i+1][left])
+                        {
+                            HFarrayNeg[i][j].coPeaks[2][0] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i+1][j])
+                        {
+                            HFarrayNeg[i][j].coPeaks[2][1] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+                        if(EtArrayNeg [i][j] == EtArrayNeg [i+1][right])
+                        {
+                            HFarrayNeg[i][j].coPeaks[2][2] = true;
+                            HFarrayNeg[i][j].isFlat = true;
+                        }
+
                     }
+ 
+                    
                     else
                     {
                         HFarrayNeg[i][j].pass = false;
@@ -554,9 +601,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         EtArrayPos [i+1][left] + EtArrayPos [i+1][j] + EtArrayPos [i+1][right];
 
                     //checks that the seed is greater than the periphery
-                    if(EtArrayPos [i][j] > EtArrayPos [i-1][left] && EtArrayPos [i][j] > EtArrayPos [i-1][j]   && EtArrayPos [i][j] > EtArrayPos [i-1][right] &&
-                            EtArrayPos [i][j] > EtArrayPos [i][left]                                                && EtArrayPos [i][j] > EtArrayPos [i][right]   &&
-                            EtArrayPos [i][j] > EtArrayPos [i+1][left] && EtArrayPos [i][j] > EtArrayPos [i+1][j]   && EtArrayPos [i][j] > EtArrayPos [i+1][right]
+                    if(EtArrayPos [i][j] >= EtArrayPos [i-1][left] && EtArrayPos [i][j] >= EtArrayPos [i-1][j]   && EtArrayPos [i][j] >= EtArrayPos [i-1][right] &&
+                            EtArrayPos [i][j] >= EtArrayPos [i][left]                                                && EtArrayPos [i][j] >= EtArrayPos [i][right]   &&
+                            EtArrayPos [i][j] >= EtArrayPos [i+1][left] && EtArrayPos [i][j] >= EtArrayPos [i+1][j]   && EtArrayPos [i][j] >= EtArrayPos [i+1][right]
                             && PosJets[i][j] > jetThreshold) //total energy threshold
                     {
                         cout << "Made Trigger Jet in PosHF" << endl;
@@ -567,7 +614,50 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         HFarrayPos[i][j].seedEt = EtArrayPos [i][j];
                         HFarrayPos[i][j].seedTotalR = EtArrayPos[i][j]/PosJets[i][j];
                         HFarrayPos[i][j].pass = true;                       //initial true setting for whether it is a good jet
+                        HFarrayPos[i][j].isFlat = false;
+                        if(EtArrayPos [i][j] == EtArrayPos [i][left])
+                        {
+                            HFarrayPos[i][j].coPeaks[1][0] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i][right])
+                        {
+                            HFarrayPos[i][j].coPeaks[1][2] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i-1][left])
+                        {
+                            HFarrayPos[i][j].coPeaks[0][0] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i-1][j])
+                        {
+                            HFarrayPos[i][j].coPeaks[0][1] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i-1][right])
+                        {
+                            HFarrayPos[i][j].coPeaks[0][2] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i+1][left])
+                        {
+                            HFarrayPos[i][j].coPeaks[2][0] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i+1][j])
+                        {
+                            HFarrayPos[i][j].coPeaks[2][1] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+                        if(EtArrayPos [i][j] == EtArrayPos [i+1][right])
+                        {
+                            HFarrayPos[i][j].coPeaks[2][2] = true;
+                            HFarrayPos[i][j].isFlat = true;
+                        }
+
                     }
+                    
                     else
                     {
                         HFarrayPos[i][j].pass = false;
@@ -584,7 +674,76 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
         }
     }
+    //Now it is time to resolve overlapping and or flat topped jets
+    for(int iphi = 1; iphi < 72; iphi+=2)
+    {
+        for(int ieta = 31; ieta < 40; ieta++)
+        {
+            //check and resolve flat tops
+            if(HFarrayPos[ieta][iphi].isFlat && HFarrayPos[ieta][iphi].pass)
+            {
+                for(int relphi = 0; relphi < 3; relphi++)
+                {
+                    for(int releta = 0; releta < 3; releta++)
+                    {
+                        if(HFarrayPos[ieta][iphi].coPeaks[releta][relphi]  && coPeaks)
+                        {
+                            int coPhi = iphi+2*relphi-2;
+                            if(coPhi > 71)
+                            {
+                                coPhi = 1;
+                            }
+                            if(coPhi < 1)
+                            {
+                                coPhi = 71;
+                            }
+                            if(HFarrayPos[ieta][iphi].jetEt < HFarrayPos[ieta+releta-1][coPhi].jetEt)
+                            {
+                                HFarrayPos[ieta][iphi].pass = false;
+                             //   HFarrayPos[ieta+releta-1][coPhi].pass = true; //unclear whether this is a good idea
+                            }
+                        }
+                        if(HFarrayPos[ieta][iphi].isFlat  && !coPeaks)
+                        {
+                            HFarrayPos[ieta][iphi].pass = false;
+                        }
+                    }
+                }
+            }
+            if(HFarrayNeg[ieta][iphi].isFlat && HFarrayNeg[ieta][iphi].pass)
+            {
+                for(int relphi = 0; relphi < 3; relphi++)
+                {
+                    for(int releta = 0; releta < 3; releta++)
+                    {
+                        if(HFarrayNeg[ieta][iphi].coPeaks[releta][relphi] && coPeaks)
+                        {
+                            int coPhi = iphi+2*relphi-2;
+                            if(coPhi > 71)
+                            {
+                                coPhi = 1;
+                            }
+                            if(coPhi < 1)
+                            {
+                                coPhi = 71;
+                            }
+                            if(HFarrayNeg[ieta][iphi].jetEt < HFarrayNeg[ieta+releta-1][coPhi].jetEt)
+                            {
+                                HFarrayNeg[ieta][iphi].pass = false;
+                              //  HFarrayPos[ieta+releta-1][coPhi].pass = true;  //unclear whether this is a good idea
+                            }
+                        }
+                        if(HFarrayNeg[ieta][iphi].isFlat  && !coPeaks)
+                        {
+                            HFarrayNeg[ieta][iphi].pass = false;
+                        }
 
+                    }
+                }
+            }
+
+        }
+    }
     //Pileup subtraction.  Now, it loops over every cell to find the total energy in HF, then subtracts the newly made jet energies.  Then averages over the number of cells in HF (minus the ones taken up by a jet).  It then subtracts that average energy (multiplied by 9) from each trigger jet and evaluates whether or not the trigger jet is still valid (passes seed threshold and total threshold) if it no longer passes it throws it in the average and loops back through (and adjusts the number of jets in the event accordingly)
     while(pileUpSubtracting)
     {
@@ -619,7 +778,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         trigPosJets--;
                         totalPosTrigJetEt -= HFarrayPos[j][k].jetEt;
                         totalPosHFEt += HFarrayPos[j][k].jetEt;
-                        pileUpSubtracting = true;
+      //                  pileUpSubtracting = true;
                     }
                     else
                     {
@@ -637,7 +796,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         trigNegJets--;
                         totalNegTrigJetEt -= HFarrayNeg[j][k].jetEt;
                         totalNegHFEt += HFarrayNeg[j][k].jetEt;
-                        pileUpSubtracting = true;
+    //                    pileUpSubtracting = true;  //Setting pileUpSubtracting to true will make the algorithm recalculate after a jet is removed.
                     }
                     else
                     {
