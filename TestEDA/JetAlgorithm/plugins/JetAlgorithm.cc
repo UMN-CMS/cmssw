@@ -65,6 +65,7 @@ Implementation:
 #include "DataFormats/Math/interface/deltaR.h"
 //C++
 #include <math.h>
+#include <stdlib.h>
 //Zach's Converter
 #include "TestEDA/CutAssessment/interface/Genconverter.h"
 //L1 Jets
@@ -145,6 +146,11 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* Phi;
         TH1D* IPhi;
         TH1D* absEta;
+        TH1D* EtMatchedwHEcoin;
+        TH1D* EtaMatchedwHEcoin;
+        TH1D* PhiMatchedwHEcoin;
+        TH1D* IPhiMatchedwHEcoin;
+        TH1D* absEtaMatchedwHEcoin;
         TH1D* EtMatched;
         TH1D* EtaMatched;
         TH1D* PhiMatched;
@@ -153,13 +159,19 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* trigJetEt;
         TH1D* trigJetEta;
         TH1D* trigJetPhi;
+        TH1D* trigJetEtwHEcoin;
+        TH1D* trigJetEtawHEcoin;
+        TH1D* trigJetPhiwHEcoin;
         TH1D* trigJetIPhi;
         TH1D* numTrigJets;
         TH1D* EtPUHist;
-        TH1D* L1JetPt;
+        TH1D* L1ForJetPt;
         TH1D* trigJetSeedTotalR;
         TH1D* matchedTrigJetEt;
         TH2D* matchedGenTrigEtR;
+        TH1D* trigJetSeedTotalRwHEcoin;
+        TH1D* matchedTrigJetEtwHEcoin;
+        TH2D* matchedGenTrigEtRwHEcoin;
         TH2D* genHadJetEnergy;
         //    TH1D* EtPUHistwJets;
 
@@ -199,16 +211,27 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     PhiMatched = fs->make<TH1D>("PhiMatched", "Matched genJet Phi", 100, -5.0, 5.0);
     IPhiMatched = fs->make<TH1D>("IPhiMatched", "Matched genJet IPhi", 76, -1.0, 74);
     absEtaMatched = fs->make<TH1D>("absEtaMatched", "Matched genJet |eta|", 100, 0, 5.0);
+    EtMatchedwHEcoin = fs->make<TH1D>("EtMatchedwHEcoin", "Matched genJet Et with opposite eta sign HE coincidence", 100, 0.0, 100.0);
+    EtaMatchedwHEcoin = fs->make<TH1D>("EtaMatchedwHEcoin", "Matched genJet Eta with opposite eta sign HE coincidence", 50, -5.0, 5.0);
+    PhiMatchedwHEcoin = fs->make<TH1D>("PhiMatchedwHEcoin", "Matched genJet Phi with opposite eta sign HE coincidence", 100, -5.0, 5.0);
+    IPhiMatchedwHEcoin = fs->make<TH1D>("IPhiMatchedwHEcoin", "Matched genJet IPhi with opposite eta sign HE coincidence", 76, -1.0, 74);
+    absEtaMatchedwHEcoin = fs->make<TH1D>("absEtaMatchedwHEcoin", "Matched genJet |eta| with opposite eta sign HE coincidence", 100, 0, 5.0);
     trigJetEt = fs->make<TH1D>("trigJetEt", "trigger Jet Et", 100, 0.0, 100.0);
     trigJetEta = fs->make<TH1D>("trigJetEta", "trigger Jet Eta", 50, -5.0, 5.0);
     trigJetPhi = fs->make<TH1D>("trigJetPhi", "trigger Jet Phi", 100, -5.0, 5.0);
     trigJetIPhi = fs->make<TH1D>("trigJetIPhi", "trigger Jet IPhi", 76, -1.0, 74);
+    trigJetEtwHEcoin = fs->make<TH1D>("trigJetEtwHEcoin", "trigger Jet Et with opposite eta sign HE coincidence", 100, 0.0, 100.0);
+    trigJetEtawHEcoin= fs->make<TH1D>("trigJetEtawHEcoin", "trigger Jet Eta with opposite eta sign HE coincidence", 50, -5.0, 5.0);
+    trigJetPhiwHEcoin = fs->make<TH1D>("trigJetPhiwHEcoin", "trigger Jet Phi with opposite eta sign HE coincidence", 100, -5.0, 5.0);
     numTrigJets = fs->make<TH1D>("numTrigJets", "Number of Trigger Jets In Event", 10, 0, 10);
     EtPUHist = fs->make<TH1D>("EtPU", "Average Et Outside of Trigger Jets", 80, 0, 20);
-    L1JetPt = fs->make<TH1D>("L1JetPt","L1 Jet Pt", 20, 0.0, 100.0);
+    L1ForJetPt = fs->make<TH1D>("L1ForJetPt","Forward L1 Jet Pt", 20, 0.0, 100.0);
     trigJetSeedTotalR = fs->make<TH1D>("trigJetSeedTotalR","trigger Jet Seed to Total Ratio",10, 0.0, 1.0);
     matchedTrigJetEt = fs->make<TH1D>("matchedTrigJetEt","Et of matched trigger jets",100,0.0,100.0);
     matchedGenTrigEtR = fs->make<TH2D>("matchedGenTrigEtR","Ratio of matched Gen and Trig Jet Et",100,0.0,10.0,100,0.0,100.0);
+    trigJetSeedTotalRwHEcoin = fs->make<TH1D>("trigJetSeedTotalRwHEcoin","trigger Jet Seed to Total Ratio with opposite eta sign HE coincidence",10, 0.0, 1.0);
+    matchedTrigJetEtwHEcoin = fs->make<TH1D>("matchedTrigJetEtwHEcoin","Et of matched trigger jets with opposite eta sign HE coincidence",100,0.0,100.0);
+    matchedGenTrigEtRwHEcoin = fs->make<TH2D>("matchedGenTrigEtRwHEcoin","Ratio of matched Gen and Trig Jet Et with opposite eta sign HE coincidence",100,0.0,10.0,100,0.0,100.0);
     genHadJetEnergy = fs->make<TH2D>("genEMHadJetEnergy","GenJet EM and Hadronic Energy",200,0.0,2.0,100,0.0,100.0);
     //  EtPUHistwJets = fs->make<TH1D>("EtPUwJets", "Average Et Outside of Trigger Jets in Events with a Trigger Jet", 80, 0, 20);
 
@@ -241,9 +264,15 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double seedThreshold = 5;
     double jetThreshold = 10;
     double genJetThreshold = 10;   
+    double cenJetThreshold = 16;   //endcap jet minimum et for coincidence
+    double cenGenJetThresh = 10;   //endcap jet minimum em+had et for coincidence in MC
     bool pileUpSubtracting = true; //true means pile up Et subtraction will be done 
     bool splitPU = true;           //true means pile up is averaged in negative and postive HF separately (still goes in the same histo)
     bool coPeaks = true;          //true means the algorithm includes coPeaks and attempts to resolve degeneracy by highest jet Et
+    bool useHEL1 = true;          //records trig jets in coincidence with opposite eta sign HE l1 jet
+    double endCapEtaMin = 0.00;   //eta ranges for the cen jet coincidence (roughly corresponds to endcap)
+    double endCapEtaMax = 2.44;   //
+
 
     double totalPosHFEt = 0;
     double totalNegHFEt = 0;
@@ -264,6 +293,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool isInterestingPosJet = false;
     bool isInterestingNegJet = false;
     bool isData = iEvent.isRealData();
+    bool posHEjet = false;
+    bool negHEjet = false;
+    
 
     vector<genJet> negGenJets;
     vector<genJet> posGenJets;
@@ -309,16 +341,28 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(isData)
     {
         cout << "Getting l1jets!" << endl;
-        Handle<std::vector<l1extra::L1JetParticle>> l1jets;
-        iEvent.getByLabel(edm::InputTag("l1extraParticles","Forward"), l1jets);
+        Handle<std::vector<l1extra::L1JetParticle>> l1Forjets;
+        iEvent.getByLabel(edm::InputTag("l1extraParticles","Forward"), l1Forjets);
         cout << "Looping over them" << endl;
-        for(unsigned int iJet = 0; iJet < l1jets->size(); ++iJet)
+        for(unsigned int iJet = 0; iJet < l1Forjets->size(); ++iJet)
         {
-            cout << "Filling Jet: ";
-            cout << iJet << endl;
-            L1JetPt->Fill(l1jets->at(iJet).pt());
+            if(fabs(l1Forjets->at(iJet).eta()) >= 3.314 && fabs(l1Forjets->at(iJet).eta()) <= 4.539)
+            {
+                cout << "Filling Jet: ";
+                cout << iJet << endl;
+                L1ForJetPt->Fill(l1Forjets->at(iJet).pt());
+            }
         }
-
+        if(useHEL1)
+        {
+            Handle<std::vector<l1extra::L1JetParticle>> l1Cenjets;
+            iEvent.getByLabel(edm::InputTag("l1extraParticles","Central"), l1Cenjets);
+            for(unsigned int aJet = 0; aJet < l1Cenjets->size(); ++aJet)
+            {
+                if(l1Cenjets->at(aJet).eta() <= -1*endCapEtaMin && l1Cenjets->at(aJet).eta() >= -1*endCapEtaMax && l1Cenjets->at(aJet).et() >= cenJetThreshold) negHEjet = true;
+                if(l1Cenjets->at(aJet).eta() <= endCapEtaMax && l1Cenjets->at(aJet).eta() >= endCapEtaMin && l1Cenjets->at(aJet).et() >= cenJetThreshold) posHEjet = true;
+            }
+        }
     }
     if(!isData)
     {
@@ -326,7 +370,18 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         {
             //      cout << "Eta Values: ";
             //      cout << pIn->at(k).eta() << endl;
-            if(((pIn->at(k).hadEnergy() + pIn->at(k).emEnergy())/pIn->at(k).energy())*pIn->at(k).et() > genJetThreshold)                   //makes sure that each jet has at least roughly 10GeV of transverse hadronic and em energy
+            if(useHEL1 && 
+               ((pIn->at(k).hadEnergy() + pIn->at(k).emEnergy())/pIn->at(k).energy())*pIn->at(k).et() > cenGenJetThresh &&
+               pIn->at(k).eta() < -1*endCapEtaMin && 
+               pIn->at(k).eta() > -1*endCapEtaMax)
+                negHEjet = true;
+            if(useHEL1 && 
+               ((pIn->at(k).hadEnergy() + pIn->at(k).emEnergy())/pIn->at(k).energy())*pIn->at(k).et() > cenGenJetThresh &&
+               pIn->at(k).eta() < endCapEtaMax && 
+               pIn->at(k).eta() > endCapEtaMin)
+                posHEjet = true;
+            if(((pIn->at(k).hadEnergy() + pIn->at(k).emEnergy())/pIn->at(k).energy())*pIn->at(k).et() > genJetThreshold)
+            //makes sure that each jet has at least roughly 10GeV of transverse hadronic and em energy
             {    
                 if(pIn->at(k).eta() > 2.964 && pIn->at(k).eta() < 4.716)
                 {
@@ -922,6 +977,14 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             {
                 if(negGenJets.at(i).eta < -3.4 && negGenJets.at(i).eta > -4.4) //Apply some cuts on eta, eta, phi, etc before making filling the histo.  For now this justs keeps things deep within acceptance in eta. (to turn it off just set it all to true)
                 {
+                    if(posHEjet)
+                    {
+                        EtMatchedwHEcoin->Fill(negGenJets.at(i).Et);           
+                        EtaMatchedwHEcoin->Fill(negGenJets.at(i).eta);
+                        PhiMatchedwHEcoin->Fill(negGenJets.at(i).phi);
+                        absEtaMatchedwHEcoin->Fill(fabs(negGenJets.at(i).eta));
+                        IPhiMatchedwHEcoin->Fill(Genconverter().Phi2Iphi(negGenJets.at(i).phi, negGenJets.at(i).eta));
+                    }
                     EtMatched->Fill(negGenJets.at(i).Et);           
                     EtaMatched->Fill(negGenJets.at(i).eta);
                     PhiMatched->Fill(negGenJets.at(i).phi);
@@ -938,6 +1001,14 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             {
                 if(posGenJets.at(i).eta < 4.4 && posGenJets.at(i).eta > 3.4)
                 {
+                    if(negHEjet)
+                    {
+                        EtMatchedwHEcoin->Fill(posGenJets.at(i).Et);
+                        EtaMatchedwHEcoin->Fill(posGenJets.at(i).eta);
+                        PhiMatchedwHEcoin->Fill(posGenJets.at(i).phi);
+                        absEtaMatchedwHEcoin->Fill(fabs(posGenJets.at(i).eta));
+                        IPhiMatchedwHEcoin->Fill(Genconverter().Phi2Iphi(posGenJets.at(i).phi, posGenJets.at(i).eta));
+                    }
                     EtMatched->Fill(posGenJets.at(i).Et);
                     EtaMatched->Fill(posGenJets.at(i).eta);
                     PhiMatched->Fill(posGenJets.at(i).phi);
@@ -967,6 +1038,38 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     trigJetSeedTotalR->Fill(HFarrayNeg[q][p].seedTotalR);
                     matchedTrigJetEt->Fill(HFarrayNeg[q][p].jetEt);
                     matchedGenTrigEtR->Fill(HFarrayNeg[q][p].jetEt/negGenJets.at(HFarrayNeg[q][p].genId).Et,negGenJets.at(HFarrayNeg[q][p].genId).Et);
+                }
+            }
+            if(HFarrayNeg[q][p].pass && posHEjet)
+            {
+                trigJetEtwHEcoin->Fill(HFarrayNeg[q][p].jetEt);
+                trigJetEtawHEcoin->Fill(Genconverter().IEta2Eta(-q));
+                trigJetPhiwHEcoin->Fill(Genconverter().IPhi2Phi(p));
+                if(isData)
+                {
+                    trigJetSeedTotalRwHEcoin->Fill(HFarrayNeg[q][p].seedTotalR);
+                }
+                if(!isData && HFarrayNeg[q][p].match)
+                {
+                    trigJetSeedTotalRwHEcoin->Fill(HFarrayNeg[q][p].seedTotalR);
+                    matchedTrigJetEtwHEcoin->Fill(HFarrayNeg[q][p].jetEt);
+                    matchedGenTrigEtRwHEcoin->Fill(HFarrayNeg[q][p].jetEt/negGenJets.at(HFarrayNeg[q][p].genId).Et,negGenJets.at(HFarrayNeg[q][p].genId).Et);
+                }
+            }
+            if(HFarrayPos[q][p].pass && negHEjet)
+            {
+                trigJetEtwHEcoin->Fill(HFarrayPos[q][p].jetEt);
+                trigJetEtawHEcoin->Fill(Genconverter().IEta2Eta(-q));
+                trigJetPhiwHEcoin->Fill(Genconverter().IPhi2Phi(p));
+                if(isData)
+                {
+                    trigJetSeedTotalRwHEcoin->Fill(HFarrayPos[q][p].seedTotalR);
+                }
+                if(!isData && HFarrayPos[q][p].match)
+                {
+                    trigJetSeedTotalRwHEcoin->Fill(HFarrayPos[q][p].seedTotalR);
+                    matchedTrigJetEtwHEcoin->Fill(HFarrayPos[q][p].jetEt);
+                    matchedGenTrigEtRwHEcoin->Fill(HFarrayPos[q][p].jetEt/posGenJets.at(HFarrayPos[q][p].genId).Et,posGenJets.at(HFarrayPos[q][p].genId).Et);
                 }
             }
             if(HFarrayPos[q][p].pass)
