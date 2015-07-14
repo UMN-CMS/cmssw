@@ -130,7 +130,6 @@ step1Up2015Defaults = {'-s' : 'GEN,SIM',
                              '--beamspot'    : 'NominalCollision2015',
                              '--datatier'    : 'GEN-SIM',
                              '--eventcontent': 'FEVTDEBUG',
-                             '--magField'    : '38T_PostLS1',
                              '--customise'   : 'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1'
                              }
 
@@ -335,15 +334,15 @@ steps['TTbar_13_ID']=identitySim(steps['TTbar_13'])
 
 baseDataSetRelease=[
     'CMSSW_7_1_0_pre7-PRE_STA71_V3-v1',                     # 0 run1 samples; keep GEN-SIM fixed to 710_pre7, for samples not routinely produced
-    'CMSSW_7_4_0_pre7-MCHI2_74_V3-v1',                      # 1 Run1 HI GEN-SIM (only MB = wf 140)
+    'CMSSW_7_5_0_pre4-MCHI2_75_V0-v1',                      # 1 Run1 HI GEN-SIM (only MB = wf 140)
     'CMSSW_6_2_0_pre8-PRE_ST62_V8_FastSim-v1',              # 2 for fastsim id test
 #    'CMSSW_7_1_0_pre5-START71_V1-v2',                      # 3 8 TeV , for the one sample which is part of the routine relval production (RelValZmumuJets_Pt_20_300, because of -v2)
                                                             # THIS ABOVE IS NOT USED, AT THE MOMENT
     'CMSSW_7_5_0_pre4-MCRUN2_75_V1-v1',                     # 3 - 13 TeV samples with GEN-SIM from 750_p4; also GEN-SIM-DIGI-RAW-HLTDEBUG for id tests
     'CMSSW_7_3_0_pre1-PRE_LS172_V15_FastSim-v1',            # 4 - fast sim GEN-SIM-DIGI-RAW-HLTDEBUG for id tests
-    'CMSSW_7_5_0_pre4-PU25ns_MCRUN2_75_V1-v1',              # 5 - fullSim premix
-    'CMSSW_7_5_0_pre4-PU50ns_MCRUN2_75_V0-v1',              # 6 - fullSim premix
-    'CMSSW_7_5_0_pre4-MCRUN2_75_V1_FastSim-v1'              # 7 - fastSim premix
+    'CMSSW_7_5_0_pre5-PU25ns_MCRUN2_75_V5-v1',              # 5 - fullSim PU 25ns premix
+    'CMSSW_7_5_0_pre5-PU50ns_MCRUN2_75_V4-v1',              # 6 - fullSim PU 50ns premix
+    'CMSSW_7_5_0_pre5-MCRUN2_75_V5_FastSim-v1'              # 7 - fastSim premix
     ]
 
 # note: INPUT commands to be added once GEN-SIM w/ 13TeV+PostLS1Geo will be available 
@@ -419,9 +418,9 @@ steps['RSKKGluon_m3000GeV_13INPUT']={'INPUT':InputInfo(dataSet='/RelValRSKKGluon
 steps['BuJpsiK_13INPUT']={'INPUT':InputInfo(dataSet='/RelValBuJpsiK_13/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
 steps['Cosmics_UP15INPUT']={'INPUT':InputInfo(dataSet='/RelValCosmics_UP15/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
 steps['BeamHalo_13INPUT']={'INPUT':InputInfo(dataSet='/RelValBeamHalo_13/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
-steps['HSCPstop_M_200_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValHSCPstop_M_200_13/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
-steps['RSGravitonToGaGa_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValRSGravitonToGaGa_13/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
-steps['WpToENu_M-2000_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValWpToENu_M-2000_13/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
+steps['HSCPstop_M_200_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValHSCPstop_M_200_13TeV/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
+steps['RSGravitonToGaGa_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValRSGravitonToGaGa_13TeV/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
+steps['WpToENu_M-2000_13TeVINPUT']={'INPUT':InputInfo(dataSet='/RelValWpToENu_M-2000_13TeV/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
 
 # particle guns with postLS1 geometry recycle GEN-SIM input
 steps['SingleElectronPt10_UP15INPUT']={'INPUT':InputInfo(dataSet='/RelValSingleElectronPt10_UP15/%s/GEN-SIM'%(baseDataSetRelease[3],),location='STD')}
@@ -616,7 +615,6 @@ step1FastUpg2015Defaults =merge([{'-s':'GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,L
                            '--fast':'',
                            '--conditions'  :'auto:run2_mc',
                            '--beamspot'    : 'NominalCollision2015',
-                           '--magField'    :'38T_PostLS1',
                            '--customise'   :'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1',
                            '--eventcontent':'FEVTDEBUGHLT,DQM',
                            '--datatier':'GEN-SIM-DIGI-RECO,DQMIO',
@@ -819,7 +817,6 @@ step2Defaults = { '-s'            : 'DIGI:pdigi_valid,L1,DIGI2RAW,HLT:@fake,RAW2
 #for 2015
 step2Upg2015Defaults = {'-s'     :'DIGI:pdigi_valid,L1,DIGI2RAW,HLT:@relval25ns,RAW2DIGI,L1Reco',
                  '--conditions'  :'auto:run2_mc',
-                 '--magField'    :'38T_PostLS1',
                  '--datatier'    :'GEN-SIM-DIGI-RAW-HLTDEBUG',
                  '--eventcontent':'FEVTDEBUGHLT',
                  '--customise'   :'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1',
@@ -861,7 +858,6 @@ premixUp2015Defaults = {
     '--conditions'  : 'auto:run2_mc', # 25ns GT; dedicated dict for 50ns
     '--datatier'    : 'GEN-SIM-DIGI-RAW',
     '--eventcontent': 'PREMIX',
-    '--magField'    : '38T_PostLS1',
     '--customise'   : 'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1' # temporary replacement for premix; to be brought back to customisePostLS1
 }
 premixUp2015Defaults50ns = merge([{'--conditions':'auto:run2_mc_50ns'},
@@ -878,8 +874,7 @@ digiPremixUp2015Defaults25ns = {
     '--eventcontent' : 'FEVTDEBUGHLT',
     '--datatier'     : 'GEN-SIM-DIGI-RAW-HLTDEBUG',
     '--datamix'      : 'PreMix',
-    '--customise'    : 'SLHCUpgradeSimulations/Configuration/postLS1CustomsPreMixing.customisePostLS1', # temporary replacement for premix; to be brought back to customisePostLS1
-    '--magField'     : '38T_PostLS1',
+    '--customise'    : 'SLHCUpgradeSimulations/Configuration/postLS1CustomsPreMixing.customisePostLS1' # temporary replacement for premix; to be brought back to customisePostLS1
     }
 digiPremixUp2015Defaults50ns=merge([{'-s':'DIGIPREMIX_S2:pdigi_valid,DATAMIX,L1,DIGI2RAW,HLT:@relval50ns,RAW2DIGI,L1Reco'},
                                     {'--conditions':'auto:run2_mc_50ns'},
@@ -984,7 +979,6 @@ steps['DIGIPU']=merge([{'--process':'REDIGI'},steps['DIGIPU1']])
 #for 2015
 step3Up2015Defaults = {'-s':'RAW2DIGI,L1Reco,RECO,EI,VALIDATION,DQM',
                  '--conditions':'auto:run2_mc', 
-                 '--magField'    : '38T_PostLS1',
                  '-n':'10',
                  '--datatier':'GEN-SIM-RECO,DQMIO',
                  '--eventcontent':'RECOSIM,DQM',
@@ -997,7 +991,6 @@ step3Up2015DefaultsAlCaEle50ns = merge([{'--conditions':'auto:run2_mc_50ns','--c
 
 step3Up2015Hal = {'-s'            :'RAW2DIGI,L1Reco,RECO,EI,VALIDATION,DQM',
                  '--conditions'   :'auto:run2_mc', 
-                 '--magField'     :'38T_PostLS1',
                  '--datatier'     :'GEN-SIM-RECO,DQMIO',
                   '--eventcontent':'RECOSIM,DQM',
                   '-n'            :'10',
@@ -1187,7 +1180,6 @@ steps['HARVESTCOS']={'-s':'HARVESTING:dqmHarvesting',
                      '--scenario':'cosmics'}
 steps['HARVESTHAL']={'-s'          :'HARVESTING:dqmHarvesting',
                      '--conditions':'auto:run2_mc',
-                     '--magField'  :'38T_PostLS1',
                      '--mc'        :'',
                      '--filein'    :'file:step3_inDQM.root',
                      '--scenario'    :'cosmics',
@@ -1201,16 +1193,13 @@ steps['HARVESTFS']={'-s':'HARVESTING:validationHarvestingFS',
                     '--filetype':'DQM',
                    '--scenario':'pp'}
 steps['HARVESTHI']=merge([hiDefaults,{'-s':'HARVESTING:validationHarvesting+dqmHarvesting',
-                    '--magField'    : '38T_PostLS1',
                     '--mc':'',
                     '--filetype':'DQM'}])
 steps['HARVESTHI2011']=merge([hiDefaults2011,{'-s':'HARVESTING:validationHarvesting+dqmHarvesting',
-                    '--magField'    : '38T_PostLS1',
                     '--mc':'',
                     '--filetype':'DQM'}])
 steps['HARVESTUP15']={'-s':'HARVESTING:validationHarvesting+dqmHarvesting', # todo: remove UP from label
                    '--conditions':'auto:run2_mc', 
-                   '--magField'    : '38T_PostLS1',
                    '--mc':'',
                    '--customise' : 'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1',
                    '--filetype':'DQM',
@@ -1219,7 +1208,6 @@ steps['HARVESTUP15']={'-s':'HARVESTING:validationHarvesting+dqmHarvesting', # to
 
 steps['HARVESTUP15_PU25']={'-s':'HARVESTING:validationHarvesting+dqmHarvesting', # todo: remove UP from label
                    '--conditions':'auto:run2_mc', 
-                   '--magField'    : '38T_PostLS1',
                    '--mc':'',
                    '--customise' : 'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1',
                    '--filetype':'DQM',
@@ -1227,7 +1215,6 @@ steps['HARVESTUP15_PU25']={'-s':'HARVESTING:validationHarvesting+dqmHarvesting',
 
 steps['HARVESTUP15_PU50']={'-s':'HARVESTING:validationHarvesting+dqmHarvesting', # todo: remove UP from label
                    '--conditions':'auto:run2_mc_50ns', 
-                   '--magField'    : '38T_PostLS1',
                    '--mc':'',
                    '--customise' : 'SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1',
                    '--filetype':'DQM',
@@ -1383,7 +1370,6 @@ for k in upgradeKeys:
                                        '-n' : 10,
                                        '--conditions' : gt,
                                        '--beamspot' : 'Gauss',
-                                       '--magField' : '38T_PostLS1',
                                        '--datatier' : 'GEN-SIM',
                                        '--eventcontent': 'FEVTDEBUG',
                                        '--geometry' : geom
@@ -1394,7 +1380,6 @@ for k in upgradeKeys:
                                        '-n' : 10,
                                        '--conditions' : gt,
                                        '--beamspot' : 'HLLHC',
-                                       '--magField' : '38T_PostLS1',
                                        '--datatier' : 'GEN-SIM',
                                        '--eventcontent': 'FEVTDEBUG',
                                        '--geometry' : geom
@@ -1405,7 +1390,6 @@ for k in upgradeKeys:
                                       '--conditions':gt,
                                       '--datatier':'GEN-SIM-DIGI-RAW',
                                       '-n':'10',
-                                      '--magField' : '38T_PostLS1',
                                       '--eventcontent':'FEVTDEBUGHLT',
                                       '--geometry' : geom
                                       }
@@ -1415,7 +1399,6 @@ for k in upgradeKeys:
                                       '--conditions':gt,
                                       '--datatier':'GEN-SIM-DIGI-RAW',
                                       '-n':'10',
-                                      '--magField' : '38T_PostLS1',
                                       '--eventcontent':'FEVTDEBUGHLT',
                                       '--geometry' : geom
                                       }
@@ -1428,7 +1411,6 @@ for k in upgradeKeys:
                                              '--conditions':gt,
                                              '--datatier':'GEN-SIM-DIGI-RAW',
                                              '-n':'10',
-                                             '--magField' : '38T_PostLS1',
                                              '--eventcontent':'FEVTDEBUGHLT',
                                              '--geometry' : geom
                                              }
@@ -1439,7 +1421,6 @@ for k in upgradeKeys:
                                       '--datatier':'GEN-SIM-RECO',
                                       '-n':'10',
                                       '--eventcontent':'FEVTDEBUGHLT',
-                                      '--magField' : '38T_PostLS1',
                                       '--geometry' : geom
                                       }
     if cust!=None : upgradeStepDict['RecoFull'][k]['--customise']=cust
@@ -1452,7 +1433,6 @@ for k in upgradeKeys:
                                       '--datatier':'GEN-SIM-RECO',
                                       '-n':'10',
                                       '--eventcontent':'RECOSIM',
-                                      '--magField' : '38T_PostLS1',
                                       '--geometry' : geom
                                       }
     if cust!=None : upgradeStepDict['RecoFullHGCAL'][k]['--customise']=cust
@@ -1463,7 +1443,6 @@ for k in upgradeKeys:
     upgradeStepDict['HARVESTFull'][k]={'-s':'HARVESTING:validationHarvesting+dqmHarvesting',
                                     '--conditions':gt,
                                     '--mc':'',
-                                    '--magField' : '38T_PostLS1',
                                     '--geometry' : geom,
                                     '--scenario' : 'pp',
                                     '--filetype':'DQM'
@@ -1485,7 +1464,6 @@ for k in upgradeKeys:
     upgradeStepDict['HARVESTFast'][k]={'-s':'HARVESTING:validationHarvestingFS',
                                     '--conditions':gt,
                                     '--mc':'',
-                                    '--magField' : '38T_PostLS1',
                                     '--geometry' : geom,
                                     '--scenario' : 'pp'
                                     }
