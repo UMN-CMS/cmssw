@@ -61,6 +61,8 @@ Implementation:
 
 //GenJets
 #include "DataFormats/JetReco/interface/GenJet.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
 //deltaR matching
 #include "DataFormats/Math/interface/deltaR.h"
 //C++
@@ -118,6 +120,7 @@ class JetAlgorithm : public edm::EDAnalyzer
             float eta;
             float phi;
             int id;
+            vector<const reco::GenParticle*> genConstituents;
         };
 
     private:
@@ -173,6 +176,7 @@ class JetAlgorithm : public edm::EDAnalyzer
         TH1D* matchedTrigJetEtwHEcoin;
         TH2D* matchedGenTrigEtRwHEcoin;
         TH2D* genHadJetEnergy;
+        TH2D* genEtDist;
         //    TH1D* EtPUHistwJets;
 
 };
@@ -233,6 +237,7 @@ JetAlgorithm::JetAlgorithm(const edm::ParameterSet& iConfig)
     matchedTrigJetEtwHEcoin = fs->make<TH1D>("matchedTrigJetEtwHEcoin","Et of matched trigger jets with opposite eta sign HE coincidence",100,0.0,100.0);
     matchedGenTrigEtRwHEcoin = fs->make<TH2D>("matchedGenTrigEtRwHEcoin","Ratio of matched Gen and Trig Jet Et with opposite eta sign HE coincidence",100,0.0,10.0,100,0.0,100.0);
     genHadJetEnergy = fs->make<TH2D>("genEMHadJetEnergy","GenJet EM and Hadronic Energy",200,0.0,2.0,100,0.0,100.0);
+    genEtDist = fs->make<TH2D>("genEtDist","Distribution of gen jet constituent energy ratio",10,0.0,1.0,10,0.0,1.0);
     //  EtPUHistwJets = fs->make<TH1D>("EtPUwJets", "Average Et Outside of Trigger Jets in Events with a Trigger Jet", 80, 0, 20);
 
 }
@@ -880,7 +885,9 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 aGenJet.phi = pIn->at(n).phi();
                 aGenJet.matchPass = false;
                 aGenJet.id = n;
+                aGenJet.genConstituents = pIn->at(n).getGenConstituents();
                 negGenJets.push_back(aGenJet);
+
                 if(isInterestingNegJet)
                 {
                     HFEtNegwGen->SetBinContent(fabs(Genconverter().Eta2IEta(pIn->at(n).eta()))-30,Genconverter().Phi2Iphi(pIn->at(n).phi(), pIn->at(n).eta()), pIn->at(n).et());
@@ -896,6 +903,7 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 aGenJet.phi = pIn->at(n).phi();
                 aGenJet.matchPass = false;
                 aGenJet.id = n;
+                aGenJet.genConstituents = pIn->at(n).getGenConstituents();
                 posGenJets.push_back(aGenJet);
                 if(isInterestingPosJet)
                 {
@@ -905,8 +913,23 @@ JetAlgorithm::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
             
         }
+        for(unsigned int ijet = 0; ijet < posGenJets.size(); ++ijet)
+        {
+            for(unsigned int iconst = 0; iconst < posGenJets.at(ijet).genConstituents.size(); iconst++)
+            {
+                genEtDist->Fill(deltaR(posGenJets.at(ijet).genConstituents.at(iconst)->eta(),posGenJets.at(ijet).genConstituents.at(iconst)->phi(),posGenJets.at(ijet).eta,posGenJets.at(ijet).phi),posGenJets.at(ijet).genConstituents.at(iconst)->et()/posGenJets.at(ijet).Et);
 
+            }
+        }
 
+        for(unsigned int ijet = 0; ijet < negGenJets.size(); ++ijet)
+        {
+            for(unsigned int iconst = 0; iconst < negGenJets.at(ijet).genConstituents.size(); iconst++)
+            {
+                genEtDist->Fill(deltaR(negGenJets.at(ijet).genConstituents.at(iconst)->eta(),negGenJets.at(ijet).genConstituents.at(iconst)->phi(),negGenJets.at(ijet).eta,negGenJets.at(ijet).phi),negGenJets.at(ijet).genConstituents.at(iconst)->et()/negGenJets.at(ijet).Et);
+
+            }
+        }
 
         for(int l = 31; l < 40; l++) //loops over ieta
         {
