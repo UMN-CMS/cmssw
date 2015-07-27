@@ -5,7 +5,7 @@
  * Created on May 14, 2014, 4:50 PM
  */
 
-#include "TestEDA/CutAssessment/interface/Genconverter.h"
+#include "TestEDA/JetAlgorithm/interface/Genconverter.h"
 #include <math.h>
 Genconverter::Genconverter() { }
 
