@@ -12,6 +12,8 @@ public:
   void setConsumes(edm::ConsumesCollector&) override final;
   void getEventContent(const edm::EventBase&) override final;
 
+  double value(const reco::CandidatePtr& cand) const override final;
+
   CandidateType candidateType() const override final { 
     return ELECTRON; 
   }
@@ -83,14 +85,34 @@ operator()(const reco::GsfElectronPtr& cand) const{
   const float chad = pfIso.sumChargedHadronPt;
   const float nhad = pfIso.sumNeutralHadronEt;
   const float pho = pfIso.sumPhotonEt;
+  const float  eA = _effectiveAreas.getEffectiveArea( absEta );
+  const float rho = _rhoHandle.isValid() ? (float)(*_rhoHandle) : 0; // std::max likes float arguments
+  const float iso = chad + std::max(0.0f, nhad + pho - rho*eA);
+  
+  // Apply the cut and return the result
+  // Scale by pT if the relative isolation is requested but avoid division by 0
+  return iso < isoCut*(_isRelativeIso ? cand->pt() : 1.);
+}
+
+double GsfEleEffAreaPFIsoCut::value(const reco::CandidatePtr& cand) const {
+  reco::GsfElectronPtr ele(cand);
+  // Establish the cut value
+  double absEta = std::abs(ele->superCluster()->eta());
+  
+  // Compute the combined isolation with effective area correction
+  const reco::GsfElectron::PflowIsolationVariables& pfIso =
+    ele->pfIsolationVariables();
+  const float chad = pfIso.sumChargedHadronPt;
+  const float nhad = pfIso.sumNeutralHadronEt;
+  const float pho = pfIso.sumPhotonEt;
   float  eA = _effectiveAreas.getEffectiveArea( absEta );
   float rho = (float)(*_rhoHandle); // std::max likes float arguments
   float iso = chad + std::max(0.0f, nhad + pho - rho*eA);
   
   // Divide by pT if the relative isolation is requested
   if( _isRelativeIso )
-    iso /= cand->pt();
+    iso /= ele->pt();
 
   // Apply the cut and return the result
-  return iso < isoCut;
+  return iso;
 }

@@ -27,12 +27,23 @@ def setupVIDSelection(vidproducer,cutflow):
 
 def addVIDSelectionToPATProducer(patProducer,idProducer,idName):
     patProducerIDs = None
+    userDatas = None
     for key in patProducer.__dict__.keys():
         if 'IDSources' in key:
             patProducerIDs = getattr(patProducer,key)
+        if 'userData' in key:
+            userDatas = getattr(patProducer,key)
     if patProducerIDs is None:
         raise Exception('StrangePatModule','%s does not have ID sources!'%patProducer.label())
-    setattr(patProducerIDs,idName,cms.InputTag('%s:%s'%(idProducer,idName)))
+    if userDatas is None:
+        raise Exception('StrangePatModule','%s does not have UserData sources!'%patProducer.label())
+    setattr(patProducerIDs,idName,cms.InputTag('%s:%s'%(idProducer,idName)))    
+    if( len(userDatas.userClasses.src) == 1 and 
+        type(userDatas.userClasses.src[0]) is str and 
+        userDatas.userClasses.src[0] == ''            ):
+        userDatas.userClasses.src = cms.VInputTag(cms.InputTag('%s:%s'%(idProducer,idName)))        
+    else:
+        userDatas.userClasses.src.append(cms.InputTag('%s:%s'%(idProducer,idName)))
     sys.stderr.write('\t--- %s:%s added to %s\n'%(idProducer,idName,patProducer.label()))
 
 def setupAllVIDIdsInModule(process,id_module_name,setupFunction,patProducer=None):
@@ -87,21 +98,34 @@ def setupVIDElectronSelection(process,cutflow,patProducer=None):
 
 #turns on the VID electron ID producer, possibly with extra options
 # for PAT and/or MINIAOD
-def switchOnVIDMuonIdProducer(process):
+def switchOnVIDMuonIdProducer(process, dataFormat):
     process.load('RecoMuon.MuonIdentification.muoMuonIDs_cff')
-    sys.stderr.write('Added \'muoMuonIDs\' to process definition!\n')
+    dataFormatString = "Undefined"
+    if dataFormat == DataFormat.AOD:
+        # No reconfiguration is required, default settings are for AOD
+        dataFormatString = "AOD"
+    elif dataFormat == DataFormat.MiniAOD:
+        # If we are dealing with MiniAOD, we overwrite the muon collection
+        # name appropriately, for the fragment we just loaded above. 
+        process.muoMuonIDs.physicsObjectSrc = cms.InputTag('slimmedMuons')
+        dataFormatString = "MiniAOD"
+    else:
+        raise Exception('InvalidVIDDataFormat', 'The requested data format is different from AOD or MiniAOD')
+    #
+    sys.stderr.write('Added \'muoMuonIDs\' to process definition (%s format)!\n' % dataFormatString)
 
 def setupVIDMuonSelection(process,cutflow,patProducer=None):
-    if not hasattr(process,'muoMuonIDs'):
-        raise Exception('VIDProducerNotAvailable','muoMuonIDs producer not available in process!')
-    setupVIDSelection(process.muoMuonIDs,cutflow)
+    moduleName = "muoMuonIDs"
+    if not hasattr(process, moduleName):
+        raise Exception("VIDProducerNotAvailable", "%s producer not available in process!" % moduleName)
+    setupVIDSelection(getattr(process, moduleName), cutflow)
     #add to PAT electron producer if available or specified
-    if hasattr(process,'patMuons') or patProducer is not None:
-        if patProducer is None:
-            patProducer = process.patMuons
-        idName = cutflow.idName.value()
-        addVIDSelectionToPATProducer(patProducer,'muoMuonIDs',idName)
-        
+    #if hasattr(process,'patMuons') or patProducer is not None:
+    #    if patProducer is None:
+    #        patProducer = process.patMuons
+    #    idName = cutflow.idName.value()
+    #    addVIDSelectionToPATProducer(patProducer, moduleName, idName)
+
 ####
 # Photons
 ####
@@ -135,3 +159,4 @@ def setupVIDPhotonSelection(process,cutflow,patProducer=None):
         idName = cutflow.idName.value()
         addVIDSelectionToPATProducer(patProducer,'egmPhotonIDs',idName)
         
+

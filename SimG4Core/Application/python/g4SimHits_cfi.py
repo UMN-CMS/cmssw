@@ -50,7 +50,10 @@ g4SimHits = cms.EDProducer("OscarMTProducer",
     StorePhysicsTables = cms.bool(False),
     RestorePhysicsTables = cms.bool(False),
     CheckOverlap = cms.untracked.bool(False),
-    G4Commands = cms.vstring(''),
+    G4CheckOverlap = cms.PSet(
+        NodeNames = cms.vstring()
+    ),
+    G4Commands = cms.vstring(),
     FileNameField = cms.untracked.string(''),
     FileNameGDML = cms.untracked.string(''),
     FileNameRegions = cms.untracked.string(''),
@@ -358,7 +361,7 @@ g4SimHits = cms.EDProducer("OscarMTProducer",
     CastorSD = cms.PSet(
         useShowerLibrary               = cms.bool(True),
         minEnergyInGeVforUsingSLibrary = cms.double(1.0),
-        nonCompensationFactor          = cms.double(0.85),
+        nonCompensationFactor          = cms.double(0.817),
         Verbosity                      = cms.untracked.int32(0)
     ),
     CastorShowerLibrary =  cms.PSet(

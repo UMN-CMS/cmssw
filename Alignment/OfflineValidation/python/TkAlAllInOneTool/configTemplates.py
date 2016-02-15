@@ -165,9 +165,6 @@ find . -name "*.stdout" -exec gzip -f {} \;
 ######################################################################
 mergeParallelResults="""
 
-#set directory to which TkAlOfflineJobsMerge.C saves the merged file
-# export OUTPUTDIR=.oO[datadir]Oo.
-export OUTPUTDIR=.
 .oO[copyMergeScripts]Oo.
 .oO[haddLoop]Oo.
 
@@ -184,6 +181,7 @@ ls -al .oO[mergeParallelFilePrefixes]Oo. > .oO[datadir]Oo./log_rootfilelist.txt
 compareAlignmentsExecution="""
 #merge for .oO[validationId]Oo. if it does not exist or is not up-to-date
 echo -e "\n\nComparing validations"
+cmsMkdir /store/caf/user/$USER/.oO[eosdir]Oo./
 cp .oO[CMSSW_BASE]Oo./src/Alignment/OfflineValidation/scripts/compareFileAges.C .
 root -x -q -b -l "compareFileAges.C(\\\"root://eoscms.cern.ch//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./.oO[validationId]Oo._result.root\\\", \\\".oO[compareStringsPlain]Oo.\\\")"
 comparisonNeeded=${?}
@@ -256,7 +254,7 @@ void TkAlExtendedOfflineValidation()
   p.setTreeBaseDir(".oO[OfflineTreeBaseDir]Oo.");
   p.plotDMR(".oO[DMRMethod]Oo.",.oO[DMRMinimum]Oo.,".oO[DMROptions]Oo.");
   p.plotSurfaceShapes(".oO[SurfaceShapes]Oo.");
-  p.plotChi2(".oO[resultPlotFile]Oo._result.root");
+  p.plotChi2("root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./.oO[resultPlotFile]Oo._result.root");
 }
 """
 

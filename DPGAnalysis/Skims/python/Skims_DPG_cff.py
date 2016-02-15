@@ -363,9 +363,8 @@ SKIMStreamWElectron = cms.FilteredStream(
 #####################
 
 from DPGAnalysis.Skims.ZElectronSkim_cff import *
-#ZElectronPathPhoton = cms.Path( tagPhotonSeq )
-#ZElectronPathTrack = cms.Path( tagTrackSeq )
-ZElectronPathGsf = cms.Path( tagGsfSeq )
+ZElectronPathGsf = cms.Path( zdiElectronSequence )
+
 SKIMStreamZElectron = cms.FilteredStream(
     responsible = 'ECAL DPG',
     name = 'ZElectron',
@@ -374,7 +373,6 @@ SKIMStreamZElectron = cms.FilteredStream(
     selectEvents = cms.untracked.PSet(),
     dataTier = cms.untracked.string('RAW-RECO')
     )
-
 
 #####################
 
@@ -396,7 +394,6 @@ SKIMStreamHighMET   = cms.FilteredStream(
             )
 
 #####################
-
 
 ###### MuTau Skim #########
 from DPGAnalysis.Skims.MuTauSkim_cff import *
