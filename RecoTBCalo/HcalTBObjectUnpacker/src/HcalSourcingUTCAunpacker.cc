@@ -19,7 +19,7 @@ struct eventHeader {
 
   
 void HcalSourcingUTCAunpacker::unpack(const FEDRawData&  raw, const HcalElectronicsMap emap, std::auto_ptr<HcalUHTRhistogramDigiCollection>& histoDigiCollection) const {
-  bool DEBUG = false;
+  bool DEBUG = true;
   if(DEBUG) std::cout << "Unpacker Time!" << std::endl; 
 
   if (raw.size()<4*38) {

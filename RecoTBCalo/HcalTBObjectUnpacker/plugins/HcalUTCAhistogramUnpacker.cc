@@ -11,7 +11,7 @@ using namespace std;
 
   HcalUTCAhistogramUnpacker::HcalUTCAhistogramUnpacker(edm::ParameterSet const& conf)
   {
-
+    fedNumber = conf.getParameter<int>("fedNumber");
     tok_raw_ = consumes<FEDRawDataCollection>(conf.getParameter<edm::InputTag>("fedRawDataCollectionTag"));
     produces<HcalUHTRhistogramDigiCollection>();
   }
@@ -33,7 +33,7 @@ using namespace std;
     const HcalElectronicsMap* readoutMap = item.product();
     std::auto_ptr<HcalUHTRhistogramDigiCollection> hd(new HcalUHTRhistogramDigiCollection);
 
-    const FEDRawData& fed = rawraw->FEDData(61);
+    const FEDRawData& fed = rawraw->FEDData(fedNumber);
 
     histoUnpacker_.unpack(fed, *readoutMap, hd);
     std::cout << "PUTTING COLLECTION IN EVENT" << std::endl;
