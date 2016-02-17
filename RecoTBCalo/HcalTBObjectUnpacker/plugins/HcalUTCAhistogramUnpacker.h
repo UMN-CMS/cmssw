@@ -23,6 +23,7 @@
     HcalSourcingUTCAunpacker histoUnpacker_;
     edm::EDGetTokenT<FEDRawDataCollection> tok_raw_;
     int fedNumber;
+    bool rawDump;
     std::string electronicsMapLabel_;
   };
 

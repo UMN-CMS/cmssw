@@ -11,6 +11,7 @@ using namespace std;
 
   HcalUTCAhistogramUnpacker::HcalUTCAhistogramUnpacker(edm::ParameterSet const& conf)
   {
+    rawDump = conf.getParameter<bool>("rawDump"); //prints out lots of debugging info including the raw data
     fedNumber = conf.getParameter<int>("fedNumber");
     tok_raw_ = consumes<FEDRawDataCollection>(conf.getParameter<edm::InputTag>("fedRawDataCollectionTag"));
     produces<HcalUHTRhistogramDigiCollection>();
@@ -35,10 +36,8 @@ using namespace std;
 
     const FEDRawData& fed = rawraw->FEDData(fedNumber);
 
-    histoUnpacker_.unpack(fed, *readoutMap, hd);
-    std::cout << "PUTTING COLLECTION IN EVENT" << std::endl;
+    histoUnpacker_.unpack(fed, *readoutMap, hd, rawDump);
     e.put(hd);
-    std::cout << "DONE WITH EVENT" << std::endl;
   }
 
 #include "FWCore/PluginManager/interface/ModuleDef.h"
