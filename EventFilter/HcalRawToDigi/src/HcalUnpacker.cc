@@ -588,6 +588,7 @@ void HcalUnpacker::unpackUTCA(const FEDRawData& raw, const HcalElectronicsMap& e
     int nps=(amc13->AMCId(iamc)>>12)&0xF;
     
     HcalUHTRData uhtr(amc13->AMCPayload(iamc),amc13->AMCSize(iamc));
+    //If the uhtr does not have format version 1, don't unpack
     if(uhtr.getFormatVersion() != 1) continue;
 #ifdef DebugLog
     //debug printouts
